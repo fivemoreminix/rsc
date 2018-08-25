@@ -1,16 +1,16 @@
 [[package]]
-name = "dumbcalc"
-version = "0.1.0"
-dependencies = [
- "peek-nth 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "peek-nth"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "smallvec 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "rsc"
+version = "0.1.0"
+dependencies = [
+ "peek-nth 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
