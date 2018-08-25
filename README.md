@@ -12,3 +12,6 @@ When RSC reaches stable, it will rarely change. Only performance improvements wi
 
 # License
 RSC is MIT licensed. Feel free to make a suggestion for a different license. Just file an issue.
+
+# Use
+I have not yet written any documentation, but the library is so simple that it really doesn't need any yet. Check out `src/main.rs` for an example usage.

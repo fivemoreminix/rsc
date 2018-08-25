@@ -27,7 +27,7 @@ fn main() {
         match tokenize(&buffer) {
             Ok(tokens) => {
                 let ast = parse(&tokens);
-                println!("{:#?}", ast);
+                // println!("{:#?}", ast);
                 println!("{}", compute(&ast));
             }
             Err(e) => {
