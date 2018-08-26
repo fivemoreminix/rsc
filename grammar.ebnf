@@ -1,5 +1,5 @@
-additive_expr = multiplicative_expr, { ("+" | "-"), multiplicative_expr } ;
-multiplicative_expr = parenthetical_multiplicative_expr, { ("*" | "/"), parenthetical_multiplicative_expr } ;
+additive_expr = multiplicative_expr, { ("+" | "-"), additive_expr } ;
+multiplicative_expr = parenthetical_multiplicative_expr, { ("*" | "/"), multiplicative_expr } ;
 parenthetical_multiplicative_expr = power_expr, [ "(", additive_expr, ")" ] ;
 power_expr = factor, [ "^", factor ] ;
 factor = "(", additive_expr, ")"

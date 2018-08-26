@@ -16,30 +16,26 @@ pub fn parse(tokens: &[Token]) -> Expr {
 
 fn parse_additive_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
     let expr = parse_multiplicative_expr(tokens);
-    loop {
-        match tokens.peek_nth(0) {
-            Some(Token::Operator(op)) if op == &Operator::Plus || op == &Operator::Minus => {
-                tokens.next();
-                let r_expr = parse_additive_expr(tokens);
-                return Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
-            }
-            _ => break,
+    match tokens.peek_nth(0) {
+        Some(Token::Operator(op)) if op == &Operator::Plus || op == &Operator::Minus => {
+            tokens.next();
+            let r_expr = parse_additive_expr(tokens);
+            return Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
         }
+        _ => {}
     }
     expr
 }
 
 fn parse_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
     let expr = parse_parenthetical_multiplicative_expr(tokens);
-    loop {
-        match tokens.peek_nth(0) {
-            Some(Token::Operator(op)) if op == &Operator::Star || op == &Operator::Slash => {
-                tokens.next();
-                let r_expr = parse_additive_expr(tokens);
-                return Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
-            }
-            _ => break,
+    match tokens.peek_nth(0) {
+        Some(Token::Operator(op)) if op == &Operator::Star || op == &Operator::Slash => {
+            tokens.next();
+            let r_expr = parse_multiplicative_expr(tokens);
+            return Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
         }
+        _ => {}
     }
     expr
 }
