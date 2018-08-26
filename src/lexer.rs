@@ -32,6 +32,10 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             '(' => tokens.push(Token::Operator(LParen)),
             ')' => tokens.push(Token::Operator(RParen)),
             c => {
+                if c.is_whitespace() {
+                    break;
+                }
+
                 if is_digit(c) || c == '.' {
                     let mut number_string = c.to_string();
                     
