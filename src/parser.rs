@@ -61,14 +61,16 @@ fn parse_parenthetical_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>
 }
 
 fn parse_power_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
-    let expr = parse_factor(tokens);
-    match tokens.peek_nth(0) {
-        Some(Token::Operator(op)) if op == &Operator::Caret => {
-            tokens.next();
-            let r_expr = parse_factor(tokens);
-            return Expr::Pow(Box::new(expr), Box::new(r_expr));
+    let mut expr = parse_factor(tokens);
+    loop {
+        match tokens.peek_nth(0) {
+            Some(Token::Operator(op)) if op == &Operator::Caret => {
+                tokens.next();
+                let exponent = parse_factor(tokens);
+                expr = Expr::Pow(Box::new(expr), Box::new(exponent));
+            }
+            _ => break,
         }
-        _ => {}
     }
     expr
 }
