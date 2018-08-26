@@ -15,6 +15,3 @@ path = "src/lib.rs"
 [[bin]]
 name = "rsc"
 path = "src/main.rs"
-
-[dependencies]
-peek-nth = "0.2.0"

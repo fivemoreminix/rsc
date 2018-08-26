@@ -1,6 +1,7 @@
-use lexer::*;
 use std::slice::Iter;
-use peek_nth::{IteratorExt, PeekableNth};
+use std::iter::Peekable;
+
+use lexer::*;
 
 #[derive(Debug)]
 pub enum Expr {
@@ -10,14 +11,13 @@ pub enum Expr {
 }
 
 pub fn parse(tokens: &[Token]) -> Expr {
-    let mut iterator = tokens.iter().peekable_nth();
-    parse_additive_expr(&mut iterator)
+    parse_additive_expr(&mut tokens.iter().peekable())
 }
 
-fn parse_additive_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
+fn parse_additive_expr(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     let mut expr = parse_multiplicative_expr(tokens);
     loop {
-        match tokens.peek_nth(0) {
+        match tokens.peek() {
             Some(Token::Operator(op)) if op == &Operator::Plus || op == &Operator::Minus => {
                 tokens.next();
                 let r_expr = parse_multiplicative_expr(tokens);
@@ -29,10 +29,10 @@ fn parse_additive_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
     expr
 }
 
-fn parse_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
+fn parse_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     let mut expr = parse_parenthetical_multiplicative_expr(tokens);
     loop {
-        match tokens.peek_nth(0) {
+        match tokens.peek() {
             Some(Token::Operator(op)) if op == &Operator::Star || op == &Operator::Slash => {
                 tokens.next();
                 let r_expr = parse_parenthetical_multiplicative_expr(tokens);
@@ -44,9 +44,9 @@ fn parse_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
     expr
 }
 
-fn parse_parenthetical_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
+fn parse_parenthetical_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     let expr = parse_power_expr(tokens);
-    match tokens.peek_nth(0) {
+    match tokens.peek() {
         Some(Token::Operator(op)) if op == &Operator::LParen => {
             tokens.next();
             let internal_expr = parse_additive_expr(tokens);
@@ -60,10 +60,10 @@ fn parse_parenthetical_multiplicative_expr(tokens: &mut PeekableNth<Iter<Token>>
     expr
 }
 
-fn parse_power_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
+fn parse_power_expr(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     let mut expr = parse_factor(tokens);
     loop {
-        match tokens.peek_nth(0) {
+        match tokens.peek() {
             Some(Token::Operator(op)) if op == &Operator::Caret => {
                 tokens.next();
                 let exponent = parse_factor(tokens);
@@ -75,7 +75,7 @@ fn parse_power_expr(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
     expr
 }
 
-fn parse_factor(tokens: &mut PeekableNth<Iter<Token>>) -> Expr {
+fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Expr {
     match tokens.next() {
         Some(Token::Operator(Operator::LParen)) => {
             let expr = parse_additive_expr(tokens);

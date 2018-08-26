@@ -1,5 +1,3 @@
-extern crate peek_nth;
-
 use std::io::prelude::*;
 
 mod lexer;
