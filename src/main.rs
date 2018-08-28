@@ -45,14 +45,20 @@ fn main() {
 
         match tokenize(&buffer) {
             Ok(tokens) => {
-                let ast = parse(&tokens);
-                if print_ast {
-                    println!("{:#?}", ast);
+                match parse(&tokens) {
+                    Ok(ast) => {
+                        if print_ast {
+                            println!("{:#?}", ast);
+                        }
+                        println!("{}", compute(&ast));
+                    }
+                    Err(err) => {
+                        println!("Parser error: {:?}", err);
+                    }
                 }
-                println!("{}", compute(&ast));
             }
-            Err(e) => {
-                println!("error: {}", e);
+            Err(err) => {
+                println!("Lexer error: {:?}", err);
             }
         }
 

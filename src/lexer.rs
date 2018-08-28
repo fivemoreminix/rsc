@@ -16,7 +16,13 @@ pub enum Token {
     Operator(Operator),
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
+#[derive(Debug, Clone, PartialEq)]
+pub enum LexerError {
+    InvalidCharacter(char),
+    InvalidNumber(String),
+}
+
+pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::<Token>::new();
 
     let chars: Vec<char> = input.chars().collect();
@@ -48,14 +54,14 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                     let number;
                     match number_string.parse::<f64>() {
                         Ok(num) => number = num,
-                        _ => return Err(format!("Invalid number entered: {:?}", number_string)),
+                        _ => return Err(LexerError::InvalidNumber(number_string)),
                     }
 
                     tokens.push(Token::Number(number));
 
                     continue; // we i += 1 at end of while
                 } else {
-                    println!("I don't understand. Please type only math equations. It's all I know.");
+                    return Err(LexerError::InvalidCharacter(c));
                 }
             }
         }
