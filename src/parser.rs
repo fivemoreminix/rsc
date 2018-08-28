@@ -7,6 +7,7 @@ use lexer::*;
 pub enum Expr {
     BinOp(Operator, Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
+    Neg(Box<Expr>),
     Constant(f64),
 }
 
@@ -83,6 +84,9 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Expr {
                 Some(Token::Operator(Operator::RParen)) => expr,
                 _ => panic!("Expected closing parenthesis"),
             }
+        }
+        Some(Token::Operator(Operator::Minus)) => {
+            Expr::Neg(Box::new(parse_factor(tokens)))
         }
         Some(Token::Number(n)) => Expr::Constant(*n),
         t => panic!("Expected factor, found {:?}", t),

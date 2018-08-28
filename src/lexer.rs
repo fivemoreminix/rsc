@@ -36,11 +36,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                     break;
                 }
 
-                if is_digit(c) || c == '.' {
+                if c.is_digit(10) || c == '.' {
                     let mut number_string = c.to_string();
                     
                     i += 1;
-                    while i < chars.len() && (is_digit(chars[i]) || chars[i] == '.') {
+                    while i < chars.len() && (chars[i].is_digit(10) || chars[i] == '.') {
                         number_string.push(chars[i]);
                         i += 1;
                     }
@@ -63,11 +63,4 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     }
     
     Ok(tokens)
-}
-
-fn is_digit(c: char) -> bool {
-    match c {
-        '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => true,
-        _ => false,
-    }
 }

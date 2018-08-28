@@ -4,6 +4,7 @@ use parser::*;
 pub fn compute(expr: &Expr) -> f64 {
     match expr {
         Expr::Constant(num) => *num,
+        Expr::Neg(expr) => -compute(expr),
         Expr::BinOp(op, lexpr, rexpr) => {
             let lnum = compute(&lexpr);
             let rnum = compute(&rexpr);
