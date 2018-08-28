@@ -14,7 +14,18 @@ pub fn compute(expr: &Expr) -> f64 {
                 Operator::Minus => lnum - rnum,
                 Operator::Star => lnum * rnum,
                 Operator::Slash => lnum / rnum,
+                Operator::Percent => lnum % rnum,
                 _ => unimplemented!(),
+            }
+        }
+        Expr::Function(function, expr) => {
+            let num = compute(&expr);
+            match function {
+                Function::Sqrt => num.sqrt(),
+                Function::Sin => num.sin(),
+                Function::Cos => num.cos(),
+                Function::Tan => num.tan(),
+                Function::Log => num.log10(),
             }
         }
         Expr::Pow(lexpr, rexpr) => {

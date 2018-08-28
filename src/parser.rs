@@ -8,6 +8,7 @@ pub enum Expr {
     BinOp(Operator, Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
+    Function(Function, Box<Expr>),
     Constant(f64),
 }
 
@@ -91,6 +92,9 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
                 Some(Token::Operator(Operator::RParen)) => expr,
                 _ => Err(ExpectedClosingParenthesis),
             }
+        }
+        Some(Token::Function(function)) => {
+            Ok(Expr::Function(*function, Box::new(parse_additive_expr(tokens)?)))
         }
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?)))
