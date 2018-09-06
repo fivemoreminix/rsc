@@ -76,7 +76,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                 } else if c.is_alphabetic() {
                     let mut full_identifier = c.to_string();
 
-                    i += 1;
+                    i += 1; // step over first character of identifier
                     while i < chars.len() && chars[i].is_alphabetic() {
                         full_identifier.push(chars[i]);
                         i += 1;
@@ -90,6 +90,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                         "log" => tokens.push(Token::Function(Log)),
                         _ => return Err(LexerError::InvalidIdentifier(full_identifier)),
                     }
+
+		            continue;
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }
