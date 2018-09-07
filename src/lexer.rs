@@ -1,3 +1,5 @@
+//! For making notable symbols and words out of text.
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Operator {
     Plus,
@@ -35,6 +37,7 @@ pub enum LexerError {
     InvalidIdentifier(String),
 }
 
+/// Turn a string into a vector of tokens.
 pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::<Token>::new();
 
@@ -57,7 +60,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                     i += 1;
                     continue;
                 } else if c.is_digit(10) || c == '.' {
-                    let mut number_string = c.to_string();
+                    let mut number_string = c.to_string(); // Like creating a new string and pushing the character.
                     
                     i += 1;
                     while i < chars.len() && (chars[i].is_digit(10) || chars[i] == '.') {
@@ -65,19 +68,17 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                         i += 1;
                     }
 
-                    let number;
                     match number_string.parse::<f64>() {
-                        Ok(num) => number = num,
+                        Ok(num) => tokens.push(Token::Number(num)),
                         _ => return Err(LexerError::InvalidNumber(number_string)),
                     }
 
-                    tokens.push(Token::Number(number));
-
-                    continue; // we i += 1 at end of while
+                    continue; // We i += 1 at end of latest while.
                 } else if c.is_alphabetic() {
                     let mut full_identifier = c.to_string();
 
-                    i += 1; // step over first character of identifier
+                    i += 1; // Step over first character of identifier.
+                    // While we're still reading alphabetical characters.
                     while i < chars.len() && chars[i].is_alphabetic() {
                         full_identifier.push(chars[i]);
                         i += 1;
