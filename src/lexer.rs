@@ -54,7 +54,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
             '√' => tokens.push(Token::Function(Sqrt)),
             c => {
                 if c.is_whitespace() {
-                    break;
+                    i += 1;
+                    continue;
                 } else if c.is_digit(10) || c == '.' {
                     let mut number_string = c.to_string();
                     

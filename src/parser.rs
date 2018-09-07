@@ -94,7 +94,7 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
             }
         }
         Some(Token::Function(function)) => {
-            Ok(Expr::Function(*function, Box::new(parse_additive_expr(tokens)?)))
+            Ok(Expr::Function(*function, Box::new(parse_factor(tokens)?)))
         }
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?)))
