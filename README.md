@@ -49,6 +49,6 @@ Lexer error: InvalidIdentifier("oops")
 Lexer error: InvalidNumber("3.3.1")
 >2+
 Parser error: ExpectedFactor(None)
->2++
-Parser error: ExpectedFactor(Some(Operator(Plus)))
+>2(3
+Parser error: ExpectedClosingParenthesis
 ```
