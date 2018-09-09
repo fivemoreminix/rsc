@@ -113,6 +113,12 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
         Some(Token::Function(function)) => {
             Ok(Expr::Function(*function, Box::new(parse_factor(tokens)?))) // All functions assume the next factor is its operand.
         }
+        Some(Token::Constant(constant)) => {
+            Ok(Expr::Constant(match constant {
+                Constant::Pi => ::std::f64::consts::PI,
+                Constant::E => ::std::f64::consts::E,
+            }))
+        }
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?))) // Unary negative expressions like `-factor`.
         }

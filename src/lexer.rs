@@ -15,6 +15,7 @@ use self::Operator::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Function {
+    // Single-argument functions
     Sqrt,
     Sin,
     Cos,
@@ -23,11 +24,19 @@ pub enum Function {
 }
 use self::Function::*;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Constant {
+    Pi,
+    E
+}
+use self::Constant::*;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Token {
     Number(f64),
     Operator(Operator),
     Function(Function),
+    Constant(Constant),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,6 +64,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
             '(' => tokens.push(Token::Operator(LParen)),
             ')' => tokens.push(Token::Operator(RParen)),
             '√' => tokens.push(Token::Function(Sqrt)),
+            'π' => tokens.push(Token::Constant(Pi)),
             c => {
                 if c.is_whitespace() {
                     i += 1;
@@ -85,6 +95,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                     }
 
                     match &full_identifier.to_lowercase()[..] {
+                        // Constants
+                        "pi" => tokens.push(Token::Constant(Pi)),
+                        "e" => tokens.push(Token::Constant(E)),
+
+                        // Functions
                         "sqrt" => tokens.push(Token::Function(Sqrt)),
                         "sin" => tokens.push(Token::Function(Sin)),
                         "cos" => tokens.push(Token::Function(Cos)),
