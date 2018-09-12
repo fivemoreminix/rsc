@@ -6,6 +6,9 @@ The abbreviation can be interpreted in two majorly different ways:
 * Rust Scientific Calculations library
 * Rust Scientific Calculator
 
+# Obtaining RSC
+If you would like to install RSC as a program onto your computer, you can either build the package or download it from the releases. More information [here](https://github.com/asmoaesl/rsc/wiki/Executable).
+
 # Size
 **RSC is ~300 lines of code**.
 
