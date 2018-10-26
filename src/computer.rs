@@ -1,8 +1,8 @@
 //! For taking the product of the parser and calculating it into a 
 //! a final form. In this case, the final form is an f64.
 
-use lexer::*;
-use parser::*;
+use crate::lexer::*;
+use crate::parser::*;
 
 // This function uses a lot of recursion. This is because it keeps it
 // simple, but if you come bearing big changes, you may have to rewrite

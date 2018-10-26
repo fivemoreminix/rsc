@@ -5,10 +5,15 @@
 //! changes. We encourage others to change RSC to their liking. You do not need to attribute
 //! anything to us. This is MIT licensed software.
 
+#![feature(test)]
+
+extern crate test;
+
 pub mod lexer;
 pub mod parser;
 pub mod computer;
 
+#[derive(Debug, Clone)]
 pub enum EvalError {
     ParserError(parser::ParserError),
     LexerError(lexer::LexerError),
@@ -24,5 +29,35 @@ pub fn eval(input: &str) -> Result<f64, EvalError> {
             Err(parser_err) => Err(EvalError::ParserError(parser_err)),
         }
         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use self::test::Bencher;
+
+    static INPUT: &'static str = "sqrt((6.1--2.22)^2 + (-24-10.5)^2)";
+
+    #[bench]
+    fn bench_eval(b: &mut Bencher) {
+        b.iter(|| eval(INPUT).unwrap());
+    }
+
+    #[bench]
+    fn bench_tokenize(b: &mut Bencher) {
+        b.iter(|| lexer::tokenize(INPUT).unwrap());
+    }
+
+    #[bench]
+    fn bench_parse(b: &mut Bencher) {
+        let tokens = lexer::tokenize(INPUT).unwrap();
+        b.iter(|| parser::parse(&tokens).unwrap());
+    }
+
+    #[bench]
+    fn bench_compute(b: &mut Bencher) {
+        let ast = parser::parse(&lexer::tokenize(INPUT).unwrap()).unwrap();
+        b.iter(|| computer::compute(&ast));
     }
 }

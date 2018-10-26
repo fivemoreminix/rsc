@@ -7,7 +7,7 @@
 use std::slice::Iter;
 use std::iter::Peekable;
 
-use lexer::*;
+use crate::lexer::*;
 
 #[derive(Debug)]
 pub enum Expr {
