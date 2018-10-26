@@ -47,7 +47,6 @@ fn main() {
 
         match tokenize(&buffer) {
             Ok(tokens) => {
-		        //println!("{:?}", tokens);
                 match parse(&tokens) {
                     Ok(ast) => {
                         if print_ast {

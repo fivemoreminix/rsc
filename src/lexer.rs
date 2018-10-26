@@ -57,14 +57,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
         match chars[i] {
             '+' => tokens.push(Token::Operator(Plus)),
             '-' => tokens.push(Token::Operator(Minus)),
-            '*' | '•' | '×' => tokens.push(Token::Operator(Star)),
-            '/' | '÷' => tokens.push(Token::Operator(Slash)),
+            '*' => tokens.push(Token::Operator(Star)),
+            '/' => tokens.push(Token::Operator(Slash)),
             '%' => tokens.push(Token::Operator(Percent)),
             '^' => tokens.push(Token::Operator(Caret)),
             '(' => tokens.push(Token::Operator(LParen)),
             ')' => tokens.push(Token::Operator(RParen)),
-            '√' => tokens.push(Token::Function(Sqrt)),
-            'π' => tokens.push(Token::Constant(Pi)),
             c => {
                 if c.is_whitespace() {
                     i += 1;
@@ -117,5 +115,6 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
         i += 1;
     }
     
+    tokens.shrink_to_fit();
     Ok(tokens)
 }
