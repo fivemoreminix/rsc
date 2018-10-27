@@ -31,19 +31,19 @@ pub enum Constant {
 }
 use self::Constant::*;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Number(f64),
     Operator(Operator),
     Function(Function),
     Constant(Constant),
+    Identifier(String), // ambiguous id that is dereferenced at computation time
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LexerError {
     InvalidCharacter(char),
     InvalidNumber(String),
-    InvalidIdentifier(String),
 }
 
 /// Turn a string into a vector of tokens.
@@ -103,7 +103,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                         "cos" => tokens.push(Token::Function(Cos)),
                         "tan" => tokens.push(Token::Function(Tan)),
                         "log" => tokens.push(Token::Function(Log)),
-                        _ => return Err(LexerError::InvalidIdentifier(full_identifier)),
+                        
+                        id => tokens.push(Token::Identifier(id.to_owned())),
                     }
 
 		            continue;

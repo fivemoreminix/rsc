@@ -4,13 +4,14 @@
 use crate::lexer::*;
 use crate::parser::*;
 
-// This function uses a lot of recursion. This is because it keeps it
-// simple, but if you come bearing big changes, you may have to rewrite
+// If you come bearing big changes, you may have to rewrite
 // this to suit your needs.
+
 /// Turn an AST / Expr into an f64.
 pub fn compute(expr: &Expr) -> f64 {
     match expr {
         Expr::Constant(num) => *num,
+        Expr::Identifier(id) => 0.,
         Expr::Neg(expr) => -compute(expr),
         Expr::BinOp(op, lexpr, rexpr) => {
             let lnum = compute(&lexpr);

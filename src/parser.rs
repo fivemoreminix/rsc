@@ -6,19 +6,21 @@
 
 use std::slice::Iter;
 use std::iter::Peekable;
+use std::cell::RefCell;
 
 use crate::lexer::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     BinOp(Operator, Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Function(Function, Box<Expr>),
     Constant(f64),
+    Identifier(String),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParserError {
     ExpectedClosingParenthesis,
     ExpectedFactor(Option<Token>), // Includes the token it found instead
@@ -119,6 +121,7 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
                 Constant::E => ::std::f64::consts::E,
             }))
         }
+        Some(Token::Identifier(id)) => Ok(Expr::Identifier(id.clone())),
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?))) // Unary negative expressions like `-factor`.
         }
