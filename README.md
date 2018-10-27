@@ -10,10 +10,22 @@ The abbreviation can be interpreted in two majorly different ways:
 If you would like to install RSC as a program onto your computer, you can either build the package or download it from the releases. More information [here](https://github.com/asmoaesl/rsc/wiki/Executable).
 
 # Size
-**RSC is ~300 lines of code**.
+RSC is ~350 lines of code. Executable RSC is about 387KiB debug; 266KiB release (on Windows).
 
 # Performance
-RSC computes instantaneously, even with debug builds.
+RSC computes instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
+```rs
+PS C:\Users\Luke\Documents\Projects\rsc\target\release> cargo bench
+    Finished release [optimized] target(s) in 0.01s
+     Running deps\rsc-d36a195311b11bb0.exe
+
+running 4 tests
+test tests::bench_compute  ... bench:         174 ns/iter (+/- 30)
+test tests::bench_eval     ... bench:       5,678 ns/iter (+/- 300)
+test tests::bench_parse    ... bench:       1,480 ns/iter (+/- 149)
+test tests::bench_tokenize ... bench:       3,774 ns/iter (+/- 352)
+...
+```
 
 # Stability
 RSC will not have any major changes to its syntax. It will remain to be consistent for a long time. It is up to forkers to make different tastes of RSC. It will also forever keep the same open-source permissions.
