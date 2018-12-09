@@ -10,7 +10,7 @@ use std::cell::RefCell;
 
 use crate::lexer::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     BinOp(Operator, Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
@@ -18,6 +18,54 @@ pub enum Expr {
     Function(Function, Box<Expr>),
     Constant(f64),
     Identifier(String),
+}
+
+impl Expr {
+    /// Replaces all instances of `old` with `new`. This method returns `true` if a value has been replaced, and `false` otherwise.
+    /// # Example
+    /// One could use this function to replace all references to an identifier "x" with the constant `20`.
+    /// 
+    /// ```
+    /// let input = "x^2 * 4";
+    /// let replacement = parser::Expr::Constant(20.);
+    /// let mut ast = parser::parse(&lexer::tokenize(&input).unwrap()).unwrap();
+    /// ast.replace(&parser::Expr::Identifier(String::from("x")), &replacement, false);
+    /// assert_eq!(computer::compute(&ast), 1600.);
+    /// ```
+    pub fn replace(&mut self, old: &Expr, new: &Expr, ignore_fields: bool) -> bool {
+        if ignore_fields {
+            if std::mem::discriminant(self) == std::mem::discriminant(old) {
+                *self = new.clone();
+                return true;
+            }
+        } else {
+            if self == old {
+                *self = new.clone();
+                return true;
+            }
+        }
+
+        let mut replaced = false;
+        match self {
+            Expr::BinOp(_, a, b) => {
+                if a.replace(old, new, ignore_fields) { replaced = true; }
+                if b.replace(old, new, ignore_fields) { replaced = true; }
+            }
+            Expr::Pow(a, b) => {
+                if a.replace(old, new, ignore_fields) { replaced = true; }
+                if b.replace(old, new, ignore_fields) { replaced = true; }
+            }
+            Expr::Neg(a) => {
+                if a.replace(old, new, ignore_fields) { replaced = true; }
+            }
+            Expr::Function(_, a) => {
+                if a.replace(old, new, ignore_fields) { replaced = true; }
+            }
+            _ => {}
+        }
+
+        replaced
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
