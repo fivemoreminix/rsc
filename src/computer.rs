@@ -11,7 +11,7 @@ use crate::parser::*;
 pub fn compute(expr: &Expr) -> f64 {
     match expr {
         Expr::Constant(num) => *num,
-        Expr::Identifier(id) => 0.,
+        Expr::Identifier(_) => 0.,
         Expr::Neg(expr) => -compute(expr),
         Expr::BinOp(op, lexpr, rexpr) => {
             let lnum = compute(&lexpr);

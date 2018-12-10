@@ -6,7 +6,6 @@
 
 use std::slice::Iter;
 use std::iter::Peekable;
-use std::cell::RefCell;
 
 use crate::lexer::*;
 
@@ -32,6 +31,7 @@ impl Expr {
     /// ast.replace(&parser::Expr::Identifier(String::from("x")), &replacement, false);
     /// assert_eq!(computer::compute(&ast), 1600.);
     /// ```
+    #[allow(dead_code)]
     pub fn replace(&mut self, old: &Expr, new: &Expr, ignore_fields: bool) -> bool {
         if ignore_fields {
             if std::mem::discriminant(self) == std::mem::discriminant(old) {
@@ -116,17 +116,19 @@ fn parse_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr,
 /// Parenthetical, multiplicative expressions are just expressions times an expression wrapped in parenthesis: `expr(expr)`, which is
 /// the same as `expr * expr`.
 fn parse_parenthetical_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
-    let expr = parse_power_expr(tokens)?;
-    match tokens.peek() {
-        Some(Token::Operator(op)) if op == &Operator::LParen => {
-            tokens.next();
-            let internal_expr = parse_additive_expr(tokens)?;
-            match tokens.next() {
-                Some(Token::Operator(op)) if op == &Operator::RParen => return Ok(Expr::BinOp(Operator::Star, Box::new(expr), Box::new(internal_expr))),
-                _ => return Err(ExpectedClosingParenthesis),
+    let mut expr = parse_power_expr(tokens)?;
+    loop {
+        match tokens.peek() {
+            Some(Token::Operator(op)) if op == &Operator::LParen => {
+                tokens.next();
+                let internal_expr = parse_additive_expr(tokens)?;
+                match tokens.next() {
+                    Some(Token::Operator(op)) if op == &Operator::RParen => expr = Expr::BinOp(Operator::Star, Box::new(expr), Box::new(internal_expr)),
+                    _ => return Err(ExpectedClosingParenthesis),
+                }
             }
+            _ => break,
         }
-        _ => {}
     }
     Ok(expr)
 }
