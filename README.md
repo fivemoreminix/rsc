@@ -13,7 +13,7 @@ If you would like to install RSC as a program onto your computer, you can either
 RSC is ~350 lines of code. Executable RSC is about 387KiB debug; 266KiB release (on Windows).
 
 # Performance
-RSC computes instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
+RSC computes next to instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
 ```rs
 PS C:\Users\Luke\Documents\Projects\rsc\target\release> cargo bench
     Finished release [optimized] target(s) in 0.01s
@@ -86,3 +86,5 @@ Parser error: ExpectedFactor(None)
 >2(3
 Parser error: ExpectedClosingParenthesis
 ```
+# Related Projects
+* [rscplot](https://github.com/asmoaesl/rscplot)
