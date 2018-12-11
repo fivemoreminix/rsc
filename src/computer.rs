@@ -34,6 +34,7 @@ pub fn compute(expr: &Expr) -> f64 {
                 Function::Cos => num.cos(),
                 Function::Tan => num.tan(),
                 Function::Log => num.log10(),
+                Function::Abs => num.abs(),
             }
         }
         Expr::Pow(lexpr, rexpr) => {

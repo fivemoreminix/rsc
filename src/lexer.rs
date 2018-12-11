@@ -10,6 +10,7 @@ pub enum Operator {
     Caret,
     LParen,
     RParen,
+    Pipe,
 }
 use self::Operator::*;
 
@@ -21,6 +22,7 @@ pub enum Function {
     Cos,
     Tan,
     Log,
+    Abs,
 }
 use self::Function::*;
 
@@ -63,6 +65,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
             '^' => tokens.push(Token::Operator(Caret)),
             '(' => tokens.push(Token::Operator(LParen)),
             ')' => tokens.push(Token::Operator(RParen)),
+            '|' => tokens.push(Token::Operator(Pipe)),
             c => {
                 if c.is_whitespace() {
                     i += 1;
@@ -103,6 +106,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                         "cos" => tokens.push(Token::Function(Cos)),
                         "tan" => tokens.push(Token::Function(Tan)),
                         "log" => tokens.push(Token::Function(Log)),
+                        "abs" => tokens.push(Token::Function(Abs)),
                         
                         id => tokens.push(Token::Identifier(id.to_owned())),
                     }

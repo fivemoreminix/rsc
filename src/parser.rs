@@ -71,13 +71,30 @@ impl Expr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParserError {
     ExpectedClosingParenthesis,
+    ExpectedClosingPipe,
     ExpectedFactor(Option<Token>), // Includes the token it found instead
 }
 use self::ParserError::*;
 
 /// Turn an array of tokens into an expression, which can be computed into a final number.
 pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
-    parse_additive_expr(&mut tokens.iter().peekable())
+    parse_absolute_expr(&mut tokens.iter().peekable())
+}
+
+fn parse_absolute_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+    match tokens.peek() {
+        Some(Token::Operator(Operator::Pipe)) => { // ("|", additive_expr, "|")
+            tokens.next();
+            let expr = parse_additive_expr(tokens)?;
+            match tokens.next() {
+                Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(Function::Abs, Box::new(expr))),
+                _ => return Err(ExpectedClosingPipe),
+            }
+        }
+        _ => { // additive_expr
+            Ok(parse_additive_expr(tokens)?)
+        }
+    }
 }
 
 /// Additive expressions are things like `expr + expr`, or `expr - expr`. It reads a multiplicative
