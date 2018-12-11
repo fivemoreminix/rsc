@@ -81,6 +81,7 @@ pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
     parse_absolute_expr(&mut tokens.iter().peekable())
 }
 
+/// A syntactic alternative to `abs` function. `abs(-2)` and `|-2|` are equivalent.
 fn parse_absolute_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
     match tokens.peek() {
         Some(Token::Operator(Operator::Pipe)) => { // ("|", additive_expr, "|")
