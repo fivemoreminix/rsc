@@ -14,9 +14,11 @@ pub enum Operator {
 }
 use self::Operator::*;
 
+/// All functions assume the next factor immediately following to be their argument.
+/// Functions cannot contain more than a single argument. This may be changed in the future.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Function {
-    // Single-argument functions
+    // mul 2,3
     Sqrt,
     Sin,
     Cos,
@@ -39,7 +41,10 @@ pub enum Token {
     Operator(Operator),
     Function(Function),
     Constant(Constant),
-    Identifier(String), // ambiguous id that is dereferenced at computation time
+    /// Identifiers are placeholders for values. These are meant to be replaced
+    /// with the `.replace` methon on `Expr`s. Identifiers present in an ast
+    /// will cause errors at computation time.
+    Identifier(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -48,7 +53,9 @@ pub enum LexerError {
     InvalidNumber(String),
 }
 
-/// Turn a string into a vector of tokens.
+/// Turn a string into a vector of tokens. This function generally takes the most time,
+/// compared to parsing and computing. It is best to run this function as few times as
+/// reasonably possible.
 pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::<Token>::new();
 
