@@ -72,7 +72,8 @@ impl Expr {
 pub enum ParserError {
     ExpectedClosingParenthesis,
     ExpectedClosingPipe,
-    ExpectedFactor(Option<Token>), // Includes the token it found instead
+    /// Its value is the `Token` that was found instead of a factor.
+    ExpectedFactor(Option<Token>),
     UnexpectedNumber(Token),
 }
 use self::ParserError::*;
@@ -114,6 +115,8 @@ pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
 /// * Performance or timing
 /// * AST will have identifiers that act as functions
 /// * You have your own preprocess function
+/// If you are not sure, use default `parse` instead.
+#[allow(dead_code)]
 pub fn parse_no_preprocess(tokens: &[Token]) -> Result<Expr, ParserError> {
     parse_additive_expr(&mut tokens.iter().peekable())
 }
