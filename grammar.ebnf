@@ -1,9 +1,9 @@
-absolute_expr = ("|", additive_expr, "|") | additive_expr ;
 additive_expr = multiplicative_expr, { ("+" | "-"), multiplicative_expr } ;
 multiplicative_expr = parenthetical_multiplicative_expr, { ("*" | "/"), parenthetical_multiplicative_expr } ;
-parenthetical_multiplicative_expr = power_expr, { "(", absolute_expr, ")" } ;
+parenthetical_multiplicative_expr = power_expr, { "(", additive_expr, ")" } ;
 power_expr = factor, { "^", factor } ;
-factor = "(", absolute_expr, ")"
+factor = "(", additive_expr, ")"
+       | "|", additive_expr, "|"
        | function, factor
        | "-", factor
        | constant

@@ -1,6 +1,6 @@
 [package]
 name = "rsc"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2018"
 authors = ["Luke Wilson"]
 description = "RSC is a handwritten scientific calculator for use in Rust projects that require turning an equation inside a string into a result."

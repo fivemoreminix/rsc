@@ -73,29 +73,49 @@ pub enum ParserError {
     ExpectedClosingParenthesis,
     ExpectedClosingPipe,
     ExpectedFactor(Option<Token>), // Includes the token it found instead
+    UnexpectedNumber(Token),
 }
 use self::ParserError::*;
 
-/// Turn an array of tokens into an expression, which can be computed into a final number.
-pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
-    parse_absolute_expr(&mut tokens.iter().peekable())
-}
-
-/// A syntactic alternative to `abs` function. `abs(-2)` and `|-2|` are equivalent.
-fn parse_absolute_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
-    match tokens.peek() {
-        Some(Token::Operator(Operator::Pipe)) => { // ("|", additive_expr, "|")
-            tokens.next();
-            let expr = parse_additive_expr(tokens)?;
-            match tokens.next() {
-                Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(Function::Abs, Box::new(expr))),
-                _ => return Err(ExpectedClosingPipe),
+/// For detecting parsing errors using an iterative solution. This function can tell when
+/// users accidentally enter an expression such as "2x" (when they mean "2(x)"). But just
+/// as easily detects unknowingly valid expressions like "neg 3" where "neg" is currently
+/// `Token::Identifier`.
+pub fn preprocess(tokens: &[Token]) -> Option<ParserError> {
+    // Preprocess and preemptive erroring on inputs like "2x"
+    let mut t = tokens.iter().peekable();
+    while let Some(tok) = t.next() {
+        match tok {
+            Token::Number(_) | Token::Constant(_) | Token::Identifier(_) => {
+                if let Some(peek_tok) = t.peek() {
+                    match peek_tok {
+                        Token::Number(_) | Token::Constant(_) | Token::Identifier(_) => {
+                            return Some(UnexpectedNumber((*peek_tok).clone()));
+                        }
+                        _ => {}
+                    }
+                }
             }
-        }
-        _ => { // additive_expr
-            Ok(parse_additive_expr(tokens)?)
+            _ => {}
         }
     }
+    None
+}
+
+/// Turn an array of tokens into an expression, which can be computed into a final number.
+pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
+    match preprocess(tokens) {
+        Some(e) => Err(e),
+        None => parse_additive_expr(&mut tokens.iter().peekable()),
+    }
+}
+
+/// Same as `parse`, except this does not automatically run `preprocess`. There are a few reasons one may use this function:
+/// * Performance or timing
+/// * AST will have identifiers that act as functions
+/// * You have your own preprocess function
+pub fn parse_no_preprocess(tokens: &[Token]) -> Result<Expr, ParserError> {
+    parse_additive_expr(&mut tokens.iter().peekable())
 }
 
 /// Additive expressions are things like `expr + expr`, or `expr - expr`. It reads a multiplicative
@@ -178,6 +198,13 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
             match tokens.next() {
                 Some(Token::Operator(Operator::RParen)) => expr,
                 _ => Err(ExpectedClosingParenthesis),
+            }
+        }
+        Some(Token::Operator(Operator::Pipe)) => {
+            let expr = parse_additive_expr(tokens)?;
+            match tokens.next() {
+                Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(Function::Abs, Box::new(expr))),
+                _ => return Err(ExpectedClosingPipe),
             }
         }
         Some(Token::Function(function)) => {
