@@ -15,6 +15,7 @@ pub mod computer;
 
 #[derive(Debug, Clone)]
 pub enum EvalError {
+    ComputeError(computer::ComputeError),
     ParserError(parser::ParserError),
     LexerError(lexer::LexerError),
 }
@@ -25,7 +26,10 @@ pub enum EvalError {
 pub fn eval(input: &str) -> Result<f64, EvalError> {
     match lexer::tokenize(input) {
         Ok(tokens) => match parser::parse(&tokens) {
-            Ok(ast) => Ok(computer::compute(&ast)),
+            Ok(ast) => match computer::compute(&ast) {
+                Ok(num) => Ok(num),
+                Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
+            }
             Err(parser_err) => Err(EvalError::ParserError(parser_err)),
         }
         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),

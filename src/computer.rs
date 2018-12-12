@@ -7,38 +7,43 @@ use crate::parser::*;
 // If you come bearing big changes, you may have to rewrite
 // this to suit your needs.
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ComputeError {
+    UnrecognizedIdentifier(String),
+}
+
 /// Turn an AST / Expr into an f64.
-pub fn compute(expr: &Expr) -> f64 {
+pub fn compute(expr: &Expr) -> Result<f64, ComputeError> {
     match expr {
-        Expr::Constant(num) => *num,
-        Expr::Identifier(_) => 0.,
-        Expr::Neg(expr) => -compute(expr),
+        Expr::Constant(num) => Ok(*num),
+        Expr::Identifier(id) => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
+        Expr::Neg(expr) => Ok(-compute(expr)?),
         Expr::BinOp(op, lexpr, rexpr) => {
-            let lnum = compute(&lexpr);
-            let rnum = compute(&rexpr);
+            let lnum = compute(&lexpr)?;
+            let rnum = compute(&rexpr)?;
 
             match op {
-                Operator::Plus => lnum + rnum,
-                Operator::Minus => lnum - rnum,
-                Operator::Star => lnum * rnum,
-                Operator::Slash => lnum / rnum,
-                Operator::Percent => lnum % rnum,
+                Operator::Plus => Ok(lnum + rnum),
+                Operator::Minus => Ok(lnum - rnum),
+                Operator::Star => Ok(lnum * rnum),
+                Operator::Slash => Ok(lnum / rnum),
+                Operator::Percent => Ok(lnum % rnum),
                 _ => unimplemented!(),
             }
         }
         Expr::Function(function, expr) => {
-            let num = compute(&expr);
-            match function {
+            let num = compute(&expr)?;
+            Ok(match function {
                 Function::Sqrt => num.sqrt(),
                 Function::Sin => num.sin(),
                 Function::Cos => num.cos(),
                 Function::Tan => num.tan(),
                 Function::Log => num.log10(),
                 Function::Abs => num.abs(),
-            }
+            })
         }
         Expr::Pow(lexpr, rexpr) => {
-            compute(&lexpr).powf(compute(&rexpr))
+            Ok(compute(&lexpr)?.powf(compute(&rexpr)?))
         }
     }
 }

@@ -52,7 +52,11 @@ fn main() {
                         if print_ast {
                             println!("{:#?}", ast);
                         }
-                        println!("{}", compute(&ast));
+                        
+                        match compute(&ast) {
+                            Ok(num) => println!("{}", num),
+                            Err(err) => println!("Compute error: {:?}", err),
+                        }
                     }
                     Err(err) => {
                         println!("Parser error: {:?}", err);
