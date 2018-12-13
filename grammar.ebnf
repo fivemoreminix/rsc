@@ -7,9 +7,12 @@ factor = "(", additive_expr, ")"
        | function, factor
        | "-", factor
        | constant
-       | number ;
+       | number
+       | identifier, [ "=", additive_expr ] ;
 function = "sqrt" | "sin" | "cos" | "tan" | "log" | "abs" ;
 constant = "pi" | "e" ;
+
+identifier = "A".."z", { "A".."z" } ;
 
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 (* number = 52 or .14 or -65535 or -.256 or -340.430 etc *)

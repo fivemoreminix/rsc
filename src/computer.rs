@@ -42,6 +42,7 @@ pub fn compute(expr: &Expr) -> Result<f64, ComputeError> {
                 Function::Abs => num.abs(),
             })
         }
+        Expr::Assignment(_, expr) => Ok(compute(&expr)?),
         Expr::Pow(lexpr, rexpr) => {
             Ok(compute(&lexpr)?.powf(compute(&rexpr)?))
         }

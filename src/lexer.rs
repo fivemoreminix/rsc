@@ -11,6 +11,7 @@ pub enum Operator {
     LParen,
     RParen,
     Pipe,
+    Equals,
 }
 use self::Operator::*;
 
@@ -73,6 +74,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
             '(' => tokens.push(Token::Operator(LParen)),
             ')' => tokens.push(Token::Operator(RParen)),
             '|' => tokens.push(Token::Operator(Pipe)),
+            '=' => tokens.push(Token::Operator(Equals)),
             c => {
                 if c.is_whitespace() {
                     i += 1;

@@ -15,6 +15,7 @@ pub enum Expr {
     Pow(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
     Function(Function, Box<Expr>),
+    Assignment(String, Box<Expr>),
     Constant(f64),
     Identifier(String),
 }
@@ -219,7 +220,15 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
                 Constant::E => ::std::f64::consts::E,
             }))
         }
-        Some(Token::Identifier(id)) => Ok(Expr::Identifier(id.clone())),
+        Some(Token::Identifier(id)) => {
+            match tokens.peek() {
+                Some(Token::Operator(Operator::Equals)) => {
+                    tokens.next();
+                    Ok(Expr::Assignment(id.clone(), Box::new(parse_additive_expr(tokens)?)))
+                }
+                _ => Ok(Expr::Identifier(id.clone())),
+            }
+        }
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?))) // Unary negative expressions like `-factor`.
         }
