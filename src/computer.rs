@@ -3,6 +3,7 @@
 
 use crate::lexer::*;
 use crate::parser::*;
+use crate::EvalError;
 
 use std::collections::HashMap;
 
@@ -20,6 +21,10 @@ pub struct Computer {
 }
 
 impl Computer {
+    pub fn new() -> Computer {
+        Computer { variables: HashMap::new() }
+    }
+
     pub fn eval(&mut self, expr: &str) -> Result<f64, EvalError> {
         match tokenize(expr) {
             Ok(tokens) => match parse(&tokens) {
@@ -36,7 +41,12 @@ impl Computer {
     pub fn compute(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
         match expr {
             Expr::Constant(num) => Ok(*num),
-            Expr::Identifier(id) => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
+            Expr::Identifier(id) => {
+                match self.variables.get(id) {
+                    Some(&value) => Ok(value),
+                    None => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
+                }
+            }
             Expr::Neg(expr) => Ok(-self.compute(expr)?),
             Expr::BinOp(op, lexpr, rexpr) => {
                 let lnum = self.compute(&lexpr)?;
@@ -75,42 +85,5 @@ impl Computer {
 
     pub fn get(&self, identifier: &str) -> Option<&f64> {
         self.variables.get(identifier)
-    }
-}
-
-/// Turn an AST / Expr into an f64.
-pub fn compute(expr: &Expr) -> Result<f64, ComputeError> {
-    match expr {
-        Expr::Constant(num) => Ok(*num),
-        Expr::Identifier(id) => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
-        Expr::Neg(expr) => Ok(-compute(expr)?),
-        Expr::BinOp(op, lexpr, rexpr) => {
-            let lnum = compute(&lexpr)?;
-            let rnum = compute(&rexpr)?;
-
-            match op {
-                Operator::Plus => Ok(lnum + rnum),
-                Operator::Minus => Ok(lnum - rnum),
-                Operator::Star => Ok(lnum * rnum),
-                Operator::Slash => Ok(lnum / rnum),
-                Operator::Percent => Ok(lnum % rnum),
-                _ => unimplemented!(),
-            }
-        }
-        Expr::Function(function, expr) => {
-            let num = compute(&expr)?;
-            Ok(match function {
-                Function::Sqrt => num.sqrt(),
-                Function::Sin => num.sin(),
-                Function::Cos => num.cos(),
-                Function::Tan => num.tan(),
-                Function::Log => num.log10(),
-                Function::Abs => num.abs(),
-            })
-        }
-        Expr::Assignment(_, expr) => Ok(compute(&expr)?),
-        Expr::Pow(lexpr, rexpr) => {
-            Ok(compute(&lexpr)?.powf(compute(&rexpr)?))
-        }
     }
 }

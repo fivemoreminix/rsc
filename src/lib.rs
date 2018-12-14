@@ -26,7 +26,7 @@ pub enum EvalError {
 pub fn eval(input: &str) -> Result<f64, EvalError> {
     match lexer::tokenize(input) {
         Ok(tokens) => match parser::parse(&tokens) {
-            Ok(ast) => match computer::compute(&ast) {
+            Ok(ast) => match computer::Computer::new().compute(&ast) {
                 Ok(num) => Ok(num),
                 Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
             }
@@ -62,6 +62,7 @@ mod tests {
     #[bench]
     fn bench_compute(b: &mut Bencher) {
         let ast = parser::parse(&lexer::tokenize(INPUT).unwrap()).unwrap();
-        b.iter(|| computer::compute(&ast));
+        let mut computer = computer::Computer::new();
+        b.iter(|| computer.compute(&ast));
     }
 }
