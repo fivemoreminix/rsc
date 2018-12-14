@@ -23,6 +23,9 @@ pub enum EvalError {
 /// Turn an expression inside a string into a number.
 /// If you are looking for more control, you may want to use
 /// the `lexer`, `parser`, and `computer` modules individually.
+/// ```
+/// assert_eq!(eval("3.1 + 2.2"), Ok(5.3));
+/// ```
 pub fn eval(input: &str) -> Result<f64, EvalError> {
     match lexer::tokenize(input) {
         Ok(tokens) => match parser::parse(&tokens) {

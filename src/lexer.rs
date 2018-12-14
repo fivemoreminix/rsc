@@ -57,6 +57,10 @@ pub enum LexerError {
 /// Turn a string into a vector of tokens. This function generally takes the most time,
 /// compared to parsing and computing. It is best to run this function as few times as
 /// reasonably possible.
+/// ```
+/// let tokens = tokenize("2 + 2").unwrap();
+/// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
+/// ```
 pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::<Token>::new();
 

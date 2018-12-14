@@ -24,7 +24,6 @@ impl Expr {
     /// Replaces all instances of `old` with `new`. This method returns `true` if a value has been replaced, and `false` otherwise.
     /// # Example
     /// One could use this function to replace all references to an identifier "x" with the constant `20`.
-    /// 
     /// ```
     /// let input = "x^2 * 4";
     /// let replacement = parser::Expr::Constant(20.);
