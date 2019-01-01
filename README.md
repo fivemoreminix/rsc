@@ -1,4 +1,4 @@
-![](https://img.shields.io/crates/l/rsc.svg) ![](https://img.shields.io/crates/dv/rsc.svg)
+![](https://img.shields.io/crates/l/rsc.svg) ![](https://img.shields.io/badge/status-stable-blue.svg)
 
 **RSC is a handwritten scientific calculator for turning an equation inside a string into a result.** RSC is designed to be very lightweight and have as few dependencies as possible. It has the goal of just doing a single thing really well, and enabling anyone to extend it with more features.
 
