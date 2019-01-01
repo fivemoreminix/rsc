@@ -15,9 +15,7 @@ pub enum ComputeError {
     UnrecognizedIdentifier(String),
 }
 
-/// A Computer object calculates expressions and has variables. One
-/// could also just create a temporary Computer object for calculation
-/// to disregard variable usage.
+/// A Computer object calculates expressions and has variables.
 /// ```
 /// let mut computer = Computer::new();
 /// assert_eq!(computer.eval("a = 2"), Ok(2.0));

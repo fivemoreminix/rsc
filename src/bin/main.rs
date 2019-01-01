@@ -1,5 +1,3 @@
-#![feature(test)]
-
 use std::io::prelude::*;
 
 use rsc::lexer::*;

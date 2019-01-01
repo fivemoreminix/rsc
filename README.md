@@ -30,6 +30,8 @@ RSC will not have any major changes to its syntax. It will remain to be consiste
 RSC is MIT licensed. RSC will always remain free to modify and use without attribution.
 
 # Example
+## Executable
+Using RSC as the actual program provides a simple interface for solving expressions. A right arrow shows where the user can input an expression, and upon pressing the Return key, the result of the entered expression is displayed on the next line.
 ```
 PS C:\Users\Luke> rsc
 >2+2
@@ -50,6 +52,32 @@ Compute error: UnrecognizedIdentifier("b")
 3
 >abs -3
 3
+```
+## Library
+RSC is very painless to use. For simple, one-off expression solving:
+```rs
+extern crate rsc;
+
+use rsc::eval;
+
+fn main() {
+    assert!(eval("5^2").unwrap() == 25.0);
+    assert!(eval("x = 5").unwrap() == 5.0);
+    assert!(eval("x").is_err()); // Previously assigned variables are discarded
+}
+```
+In order to keep variables, you must create a `Computer` instance:
+```rs
+extern crate rsc;
+
+use rsc::computer::Computer;
+
+fn main() {
+    let mut c = Computer::new();
+
+    assert!(c.eval("x = 5").unwrap() == 5.0);
+    assert!(c.eval("x^2").unwrap() == 25.0);
+}
 ```
 ## Debug
 RSC can be run with the `ast` flag and show the internal expression that was created by the parser. This is most commonly used for entertainment purposes 😛.

@@ -4,6 +4,53 @@
 //! If you need a portion of the calculator changed or removed, please fork it, and make your
 //! changes. We encourage others to change RSC to their liking. You do not need to attribute
 //! anything to us. This is MIT licensed software.
+//! 
+//! Anyone can easily create a [Calculator](computer/struct.Computer.html) and begin working with expressions. Calculators
+//! also remember variables using a HashMap. You can create and begin using the Calculator like so:
+//! ```
+//! extern crate rsc;
+//! 
+//! use rsc::computer::Computer;
+//!
+//! fn main() {
+//!     let mut c = Computer::new();
+//!
+//!     assert!(c.eval("x = 5").unwrap() == 5.0);
+//!     assert!(c.eval("x^2").unwrap() == 25.0);
+//! }
+//! ```
+//! 
+//! In most cases a simple `eval` should be all you need, but just as many times you may need
+//! to directly access the tokens and AST. Some reasons may include:
+//! * For performance or caching; lexing and parsing an expression only once, to calculate it later hundreds
+//! of times in a loop.
+//! * Better error messages or visual information for what is happening.
+//! ```
+//! extern crate rsc;
+//! 
+//! use rsc::lexer::tokenize;
+//! use rsc::parser::{Expr, parse};
+//! use rsc::computer::Computer;
+//! 
+//! fn main() {
+//!     let expr = "x^2";
+//!     let tokens = tokenize(expr).unwrap();
+//!     let ast = parse(&tokens).unwrap();
+//!     let mut computer = Computer::new();
+//!     
+//!     for x in 2..=5 {
+//!         let mut ast = ast.clone();
+//!         ast.replace(&Expr::Identifier("x"), &Expr::Constant(x as f64), false);
+//!         println!("{}", computer.compute(&ast).unwrap());
+//!     }
+//! }
+//! 
+//! // Output:
+//! // 4
+//! // 9
+//! // 16
+//! // 25
+//! ```
 
 #![feature(test)]
 
