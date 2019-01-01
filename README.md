@@ -1,3 +1,5 @@
+![](https://img.shields.io/crates/l/rsc.svg) ![](https://img.shields.io/crates/dv/rsc.svg)
+
 **RSC is a handwritten scientific calculator for turning an equation inside a string into a result.** RSC is designed to be very lightweight and have as few dependencies as possible. It has the goal of just doing a single thing really well, and enabling anyone to extend it with more features.
 
 RSC is also designed with the goal to not become bloated software. **RSC will not receive frequent updates, but that does not mean it is old or unmaintained.** That being said, RSC may still receive internal updates with relation to speed or resource usage.
