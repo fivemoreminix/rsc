@@ -1,20 +1,25 @@
 extern crate structopt;
+extern crate colored;
 
 use std::io::prelude::*;
 
 use structopt::StructOpt;
+
+use colored::Colorize;
 
 use rsc::lexer::*;
 use rsc::parser::*;
 use rsc::computer::*;
 
 #[derive(StructOpt)]
-#[structopt(about = "A scientific calculator for the terminal.")]
+#[structopt(about = "A scientific calculator for the terminal.\nManual: https://github.com/asmoaesl/rsc/wiki")]
 struct Opt {
     #[structopt(long = "ast", help = "Prints abstract syntax tree")]
     ast: bool,
     #[structopt(long = "vars", help = "Prints variable map")]
     vars: bool,
+    #[structopt(long = "no-color", help = "Prevents colored text")]
+    no_color: bool,
 }
 
 fn main() {
@@ -23,7 +28,7 @@ fn main() {
     let mut computer = Computer::new();
 
     loop {
-        print!(">");
+        print!("{}", if opt.no_color { ">".normal() } else { ">".blue() });
         std::io::stdout().flush().unwrap();
 
         let mut buffer = String::new();
@@ -47,19 +52,31 @@ fn main() {
                                 if opt.vars {
                                     println!("{:#?}", computer.variables);
                                 }
-                                println!("{}", num);
+                                if opt.no_color {
+                                    println!("{}", num);
+                                } else {
+                                    println!("{}", num.to_string().yellow());
+                                }
                             }
-                            Err(err) => println!("Compute error: {:?}", err),
+                            Err(err) => if opt.no_color {
+                                println!("Computation error: {:?}", err)
+                            } else {
+                                println!("{}", format!("Computation error: {:?}", err).red())
+                            },
                         }
                     }
-                    Err(err) => {
-                        println!("Parser error: {:?}", err);
-                    }
+                    Err(err) => if opt.no_color {
+                        println!("Parser error: {:?}", err)
+                    } else {
+                        println!("{}", format!("Parser error: {:?}", err).red())
+                    },
                 }
             }
-            Err(err) => {
-                println!("Lexer error: {:?}", err);
-            }
+            Err(err) => if opt.no_color {
+                println!("Lexer error: {:?}", err)
+            } else {
+                println!("{}", format!("Lexer error: {:?}", err).red())
+            },
         }
     }
 }
