@@ -51,9 +51,7 @@
 //! // 16
 //! // 25
 //! ```
-
-#![feature(test)]
-
+#[cfg(test)]
 extern crate test;
 
 pub mod lexer;
@@ -74,7 +72,7 @@ pub enum EvalError {
 /// assert_eq!(eval("3.1 + 2.2"), Ok(5.3));
 /// ```
 pub fn eval(input: &str) -> Result<f64, EvalError> {
-    match lexer::tokenize(input) {
+    match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new().compute(&ast) {
                 Ok(num) => Ok(num),
@@ -88,6 +86,8 @@ pub fn eval(input: &str) -> Result<f64, EvalError> {
 
 #[cfg(test)]
 mod tests {
+    #![feature(test)]
+
     use super::*;
     use self::test::Bencher;
 

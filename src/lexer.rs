@@ -19,7 +19,6 @@ use self::Operator::*;
 /// Functions cannot contain more than a single argument. This may be changed in the future.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Function {
-    // mul 2,3
     Sqrt,
     Sin,
     Cos,
@@ -29,22 +28,12 @@ pub enum Function {
 }
 use self::Function::*;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Constant {
-    Pi,
-    E
-}
-use self::Constant::*;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Number(f64),
+    Boolean(bool),
     Operator(Operator),
     Function(Function),
-    Constant(Constant),
-    /// Identifiers are placeholders for values. These are meant to be replaced
-    /// with the `.replace` methon on `Expr`s. Identifiers present in an ast
-    /// will cause errors at computation time.
     Identifier(String),
 }
 
@@ -61,14 +50,13 @@ pub enum LexerError {
 /// let tokens = tokenize("2 + 2").unwrap();
 /// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
 /// ```
-pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
+pub fn tokenize(input: &str, case_sensitive: bool) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::<Token>::new();
 
-    let chars: Vec<char> = input.chars().collect();
+    let mut chars = input.chars().peekable();
 
-    let mut i = 0usize;
-    while i < chars.len() {
-        match chars[i] {
+    while let Some(c) = chars.next() {
+        match c {
             '+' => tokens.push(Token::Operator(Plus)),
             '-' => tokens.push(Token::Operator(Minus)),
             '*' => tokens.push(Token::Operator(Star)),
@@ -81,38 +69,34 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
             '=' => tokens.push(Token::Operator(Equals)),
             c => {
                 if c.is_whitespace() {
-                    i += 1;
                     continue;
                 } else if c.is_digit(10) || c == '.' {
                     let mut number_string = c.to_string(); // Like creating a new string and pushing the character.
                     
-                    i += 1;
-                    while i < chars.len() && (chars[i].is_digit(10) || chars[i] == '.') {
-                        number_string.push(chars[i]);
-                        i += 1;
+                    while let Some(&c) = chars.peek() {
+                        if c.is_digit(10) || c == '.' {
+                            number_string.push(chars.next().unwrap());
+                        } else {
+                            break;
+                        }
                     }
 
                     match number_string.parse::<f64>() {
                         Ok(num) => tokens.push(Token::Number(num)),
                         _ => return Err(LexerError::InvalidNumber(number_string)),
                     }
-
-                    continue; // We i += 1 at end of latest while.
                 } else if c.is_alphabetic() {
                     let mut full_identifier = c.to_string();
 
-                    i += 1; // Step over first character of identifier.
-                    // While we're still reading alphabetical characters.
-                    while i < chars.len() && chars[i].is_alphabetic() {
-                        full_identifier.push(chars[i]);
-                        i += 1;
+                    while let Some(&c) = chars.peek() {
+                        if c.is_alphabetic() || c == '_' {
+                            full_identifier.push(chars.next().unwrap());
+                        } else {
+                            break;
+                        }
                     }
 
-                    match &full_identifier.to_lowercase()[..] {
-                        // Constants
-                        "pi" => tokens.push(Token::Constant(Pi)),
-                        "e" => tokens.push(Token::Constant(E)),
-
+                    match &(if case_sensitive { full_identifier } else { full_identifier.to_lowercase() })[..] {
                         // Functions
                         "sqrt" => tokens.push(Token::Function(Sqrt)),
                         "sin" => tokens.push(Token::Function(Sin)),
@@ -123,14 +107,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexerError> {
                         
                         id => tokens.push(Token::Identifier(id.to_owned())),
                     }
-
-		            continue;
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }
             }
         }
-        i += 1;
     }
     
     tokens.shrink_to_fit();

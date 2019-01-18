@@ -87,10 +87,10 @@ pub fn preprocess(tokens: &[Token]) -> Option<ParserError> {
     let mut t = tokens.iter().peekable();
     while let Some(tok) = t.next() {
         match tok {
-            Token::Number(_) | Token::Constant(_) | Token::Identifier(_) => {
+            Token::Number(_) | Token::Identifier(_) => {
                 if let Some(peek_tok) = t.peek() {
                     match peek_tok {
-                        Token::Number(_) | Token::Constant(_) | Token::Identifier(_) => {
+                        Token::Number(_) | Token::Identifier(_) => {
                             return Some(UnexpectedNumber((*peek_tok).clone()));
                         }
                         _ => {}
@@ -212,12 +212,6 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
         }
         Some(Token::Function(function)) => {
             Ok(Expr::Function(*function, Box::new(parse_factor(tokens)?))) // All functions assume the next factor is its operand.
-        }
-        Some(Token::Constant(constant)) => {
-            Ok(Expr::Constant(match constant {
-                Constant::Pi => ::std::f64::consts::PI,
-                Constant::E => ::std::f64::consts::E,
-            }))
         }
         Some(Token::Identifier(id)) => {
             match tokens.peek() {

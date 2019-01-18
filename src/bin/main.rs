@@ -40,7 +40,7 @@ fn main() {
             break;
         }
 
-        match tokenize(&buffer) {
+        match tokenize(&buffer, true) {
             Ok(tokens) => {
                 match parse(&tokens) {
                     Ok(ast) => {

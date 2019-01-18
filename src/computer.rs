@@ -33,12 +33,19 @@ pub struct Computer {
 
 impl Computer {
     pub fn new() -> Computer {
-        Computer { variables: HashMap::new() }
+        Computer {
+            variables: {
+                let mut map = HashMap::new();
+                map.insert(String::from("pi"), std::f64::consts::PI);
+                map.insert(String::from("e"), std::f64::consts::E);
+                map
+            }
+        }
     }
 
     /// Lexically analyze, parse, and compute the given equation in string form.
     pub fn eval(&mut self, expr: &str) -> Result<f64, EvalError> {
-        match tokenize(expr) {
+        match tokenize(expr, false) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => match self.compute(&ast) {
                     Ok(num) => Ok(num),
