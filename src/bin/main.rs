@@ -37,6 +37,11 @@ fn main() {
 
         if &buffer[..] == "quit" || &buffer[..] == "exit" {
             break;
+        } else if &buffer[..] == "clear" {
+            for _ in 0..50 {
+                println!("");
+            }
+            continue;
         }
 
         match tokenize(&buffer, true) {
