@@ -1,7 +1,8 @@
 additive_expr = multiplicative_expr, { ("+" | "-"), multiplicative_expr } ;
 multiplicative_expr = parenthetical_multiplicative_expr, { ("*" | "/"), parenthetical_multiplicative_expr } ;
 parenthetical_multiplicative_expr = power_expr, { "(", additive_expr, ")" } ;
-power_expr = factor, { "^", factor } ;
+power_expr = factorial_expr, { "^", factorial_expr } ;
+factorial_expr = factor, [ "!" ] ;
 factor = "(", additive_expr, ")"
        | "|", additive_expr, "|"
        | function, factor

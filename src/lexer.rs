@@ -12,6 +12,7 @@ pub enum Operator {
     RParen,
     Pipe,
     Equals,
+    Factorial,
 }
 use self::Operator::*;
 
@@ -67,6 +68,7 @@ pub fn tokenize(input: &str, case_sensitive: bool) -> Result<Vec<Token>, LexerEr
             ')' => tokens.push(Token::Operator(RParen)),
             '|' => tokens.push(Token::Operator(Pipe)),
             '=' => tokens.push(Token::Operator(Equals)),
+            '!' => tokens.push(Token::Operator(Factorial)),
             c => {
                 if c.is_whitespace() {
                     continue;

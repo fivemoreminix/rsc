@@ -14,6 +14,7 @@ pub enum Expr {
     BinOp(Operator, Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
     Neg(Box<Expr>),
+    Factorial(Box<Expr>),
     Function(Function, Box<Expr>),
     Assignment(String, Box<Expr>),
     Constant(f64),
@@ -176,18 +177,29 @@ fn parse_parenthetical_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -
 
 /// Power expressions are any expressions with an exponential: `factor ^ factor`.
 fn parse_power_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
-    let mut expr = parse_factor(tokens)?;
+    let mut expr = parse_factorial_expr(tokens)?;
     loop {
         match tokens.peek() {
             Some(Token::Operator(op)) if op == &Operator::Caret => {
                 tokens.next();
-                let exponent = parse_factor(tokens)?;
+                let exponent = parse_factorial_expr(tokens)?;
                 expr = Expr::Pow(Box::new(expr), Box::new(exponent));
             }
             _ => break,
         }
     }
     Ok(expr)
+}
+
+fn parse_factorial_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+    let expr = parse_factor(tokens)?;
+    match tokens.peek() {
+        Some(Token::Operator(Operator::Factorial)) => {
+            tokens.next();
+            Ok(Expr::Factorial(Box::new(expr)))
+        }
+        _ => Ok(expr),
+    }
 }
 
 /// The most important item -- a factor. A factor is generally the bottom level ideas

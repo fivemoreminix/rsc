@@ -12,8 +12,10 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputeError {
+    InvalidFactorial,
     UnrecognizedIdentifier(String),
 }
+use self::ComputeError::*;
 
 /// A Computer object calculates expressions and has variables.
 /// ```
@@ -63,7 +65,7 @@ impl Computer {
             Expr::Identifier(id) => {
                 match self.variables.get(id) {
                     Some(&value) => Ok(value),
-                    None => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
+                    None => Err(UnrecognizedIdentifier(id.clone())),
                 }
             }
             Expr::Neg(expr) => Ok(-self.compute_expr(expr)?),
@@ -98,6 +100,21 @@ impl Computer {
             }
             Expr::Pow(lexpr, rexpr) => {
                 Ok(self.compute_expr(&lexpr)?.powf(self.compute_expr(&rexpr)?))
+            }
+            Expr::Factorial(expr) => {
+                let mut value = self.compute_expr(&expr)?;
+                if value < 0. || value.fract() > 0. {
+                    Err(InvalidFactorial)
+                } else if value == 0. || value == 1. {
+                    Ok(1.)
+                } else {
+                    let mut factor = value - 1.;
+                    while factor > 1. && value != std::f64::INFINITY {
+                        value *= factor;
+                        factor -= 1.;
+                    }
+                    Ok(value)
+                }
             }
         }
     }
