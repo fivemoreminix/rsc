@@ -13,6 +13,13 @@ license = "MIT"
 [lib]
 path = "src/lib.rs"
 
+[dependencies]
+structopt = { version = "0.2", optional = true }
+
+[features]
+build-binary = ["structopt"]
+
 [[bin]]
 name = "rsc"
 path = "src/bin/main.rs"
+required-features = ["build-binary"]
