@@ -57,8 +57,7 @@ impl Computer {
         }
     }
 
-    /// Solve an already parsed `Expr` (AST).
-    pub fn compute(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
+    fn compute_expr(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
         match expr {
             Expr::Constant(num) => Ok(*num),
             Expr::Identifier(id) => {
@@ -67,10 +66,10 @@ impl Computer {
                     None => Err(ComputeError::UnrecognizedIdentifier(id.clone())),
                 }
             }
-            Expr::Neg(expr) => Ok(-self.compute(expr)?),
+            Expr::Neg(expr) => Ok(-self.compute_expr(expr)?),
             Expr::BinOp(op, lexpr, rexpr) => {
-                let lnum = self.compute(&lexpr)?;
-                let rnum = self.compute(&rexpr)?;
+                let lnum = self.compute_expr(&lexpr)?;
+                let rnum = self.compute_expr(&rexpr)?;
 
                 match op {
                     Operator::Plus => Ok(lnum + rnum),
@@ -82,7 +81,7 @@ impl Computer {
                 }
             }
             Expr::Function(function, expr) => {
-                let num = self.compute(&expr)?;
+                let num = self.compute_expr(&expr)?;
                 Ok(match function {
                     Function::Sqrt => num.sqrt(),
                     Function::Sin => num.sin(),
@@ -93,13 +92,25 @@ impl Computer {
                 })
             }
             Expr::Assignment(id, expr) => {
-                let value = self.compute(&expr)?;
+                let value = self.compute_expr(&expr)?;
                 self.variables.insert(id.clone(), value);
                 Ok(value)
             }
             Expr::Pow(lexpr, rexpr) => {
-                Ok(self.compute(&lexpr)?.powf(self.compute(&rexpr)?))
+                Ok(self.compute_expr(&lexpr)?.powf(self.compute_expr(&rexpr)?))
             }
         }
+    }
+
+    /// Solve an already parsed `Expr` (AST).
+    pub fn compute(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
+        let val = self.compute_expr(expr);
+        match val {
+            Ok(n) => {
+                self.variables.insert(String::from("ans"), n);
+            }
+            _ => {}
+        }
+        val
     }
 }
