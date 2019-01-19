@@ -6,9 +6,22 @@ use crate::parser::*;
 use crate::EvalError;
 
 use std::collections::HashMap;
+use std::ops::*;
 
-// If you come bearing big changes, you may have to rewrite
-// this to suit your needs.
+pub trait Num {
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn is_integer(&self) -> bool;
+    fn sqrt(&self) -> Self;
+    fn sin(&self) -> Self;
+    fn cos(&self) -> Self;
+    fn tan(&self) -> Self;
+    fn log(&self) -> Self;
+    fn abs(&self) -> Self;
+    fn pow(&self, other: &Self) -> Self;
+}
+
+//value.fract() > 0.
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputeError {
@@ -29,24 +42,24 @@ use self::ComputeError::*;
 /// );
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct Computer {
-    pub variables: HashMap<String, f64>,
+pub struct Computer<T> {
+    pub variables: HashMap<String, T>,
 }
 
-impl Computer {
-    pub fn new() -> Computer {
+impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
+    pub fn new() -> Computer<T> {
         Computer {
             variables: {
                 let mut map = HashMap::new();
-                map.insert(String::from("pi"), std::f64::consts::PI);
-                map.insert(String::from("e"), std::f64::consts::E);
+                //map.insert(String::from("pi"), std::f64::consts::PI);
+                //map.insert(String::from("e"), std::f64::consts::E);
                 map
             }
         }
     }
 
     /// Lexically analyze, parse, and compute the given equation in string form.
-    pub fn eval(&mut self, expr: &str) -> Result<f64, EvalError> {
+    pub fn eval(&mut self, expr: &str) -> Result<T, EvalError<T>> where T: std::str::FromStr {
         match tokenize(expr, false) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => match self.compute(&ast) {
@@ -59,12 +72,12 @@ impl Computer {
         }
     }
 
-    fn compute_expr(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
+    fn compute_expr(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
         match expr {
-            Expr::Constant(num) => Ok(*num),
+            Expr::Constant(num) => Ok(num.clone()),
             Expr::Identifier(id) => {
                 match self.variables.get(id) {
-                    Some(&value) => Ok(value),
+                    Some(value) => Ok(value.clone()),
                     None => Err(UnrecognizedIdentifier(id.clone())),
                 }
             }
@@ -78,7 +91,6 @@ impl Computer {
                     Operator::Minus => Ok(lnum - rnum),
                     Operator::Star => Ok(lnum * rnum),
                     Operator::Slash => Ok(lnum / rnum),
-                    Operator::Percent => Ok(lnum % rnum),
                     _ => unimplemented!(),
                 }
             }
@@ -89,29 +101,29 @@ impl Computer {
                     Function::Sin => num.sin(),
                     Function::Cos => num.cos(),
                     Function::Tan => num.tan(),
-                    Function::Log => num.log10(),
+                    Function::Log => num.log(),
                     Function::Abs => num.abs(),
                 })
             }
             Expr::Assignment(id, expr) => {
                 let value = self.compute_expr(&expr)?;
-                self.variables.insert(id.clone(), value);
+                self.variables.insert(id.clone(), value.clone());
                 Ok(value)
             }
             Expr::Pow(lexpr, rexpr) => {
-                Ok(self.compute_expr(&lexpr)?.powf(self.compute_expr(&rexpr)?))
+                Ok(self.compute_expr(&lexpr)?.pow(&self.compute_expr(&rexpr)?))
             }
             Expr::Factorial(expr) => {
                 let mut value = self.compute_expr(&expr)?;
-                if value < 0. || value.fract() > 0. {
+                if value < T::zero() || !value.is_integer() {
                     Err(InvalidFactorial)
-                } else if value == 0. || value == 1. {
-                    Ok(1.)
+                } else if value == T::zero() || value == T::one() {
+                    Ok(T::one())
                 } else {
-                    let mut factor = value - 1.;
-                    while factor > 1. && value != std::f64::INFINITY {
-                        value *= factor;
-                        factor -= 1.;
+                    let mut factor = value.clone() - T::one();
+                    while factor > T::one() {
+                        value = value * factor.clone();
+                        factor = factor - T::one();
                     }
                     Ok(value)
                 }
@@ -120,11 +132,11 @@ impl Computer {
     }
 
     /// Solve an already parsed `Expr` (AST).
-    pub fn compute(&mut self, expr: &Expr) -> Result<f64, ComputeError> {
+    pub fn compute(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
         let val = self.compute_expr(expr);
-        match val {
+        match &val {
             Ok(n) => {
-                self.variables.insert(String::from("ans"), n);
+                self.variables.insert(String::from("ans"), n.clone());
             }
             _ => {}
         }

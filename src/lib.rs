@@ -58,10 +58,46 @@ pub mod lexer;
 pub mod parser;
 pub mod computer;
 
+use crate::computer::Num;
+use std::ops::*;
+
+impl Num for f64 {
+    fn zero() -> Self {
+        0.0
+    }
+    fn one() -> Self {
+        1.0
+    }
+    fn is_integer(&self) -> bool {
+        !(self.fract() > 0.0)
+    }
+    fn sqrt(&self) -> Self {
+        f64::sqrt(*self)
+    }
+    fn sin(&self) -> Self {
+        f64::sin(*self)
+    }
+    fn cos(&self) -> Self {
+        f64::cos(*self)
+    }
+    fn tan(&self) -> Self {
+        f64::tan(*self)
+    }
+    fn log(&self) -> Self {
+        self.log10()
+    }
+    fn abs(&self) -> Self {
+        f64::abs(*self)
+    }
+    fn pow(&self, other: &Self) -> Self {
+        self.powf(*other)
+    }
+}
+
 #[derive(Debug, Clone)]
-pub enum EvalError {
+pub enum EvalError<T> {
     ComputeError(computer::ComputeError),
-    ParserError(parser::ParserError),
+    ParserError(parser::ParserError<T>),
     LexerError(lexer::LexerError),
 }
 
@@ -71,7 +107,7 @@ pub enum EvalError {
 /// ```
 /// assert_eq!(eval("3.1 + 2.2"), Ok(5.3));
 /// ```
-pub fn eval(input: &str) -> Result<f64, EvalError> {
+pub fn eval<T>(input: &str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + Ord + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
     match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new().compute(&ast) {

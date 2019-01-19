@@ -30,9 +30,8 @@ pub enum Function {
 use self::Function::*;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token {
-    Number(f64),
-    Boolean(bool),
+pub enum Token<T> {
+    Number(T),
     Operator(Operator),
     Function(Function),
     Identifier(String),
@@ -51,8 +50,8 @@ pub enum LexerError {
 /// let tokens = tokenize("2 + 2").unwrap();
 /// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
 /// ```
-pub fn tokenize(input: &str, case_sensitive: bool) -> Result<Vec<Token>, LexerError> {
-    let mut tokens = Vec::<Token>::new();
+pub fn tokenize<T>(input: &str, case_sensitive: bool) -> Result<Vec<Token<T>>, LexerError> where T: std::str::FromStr {
+    let mut tokens = Vec::<Token<T>>::new();
 
     let mut chars = input.chars().peekable();
 
@@ -83,7 +82,7 @@ pub fn tokenize(input: &str, case_sensitive: bool) -> Result<Vec<Token>, LexerEr
                         }
                     }
 
-                    match number_string.parse::<f64>() {
+                    match number_string.parse::<T>() {
                         Ok(num) => tokens.push(Token::Number(num)),
                         _ => return Err(LexerError::InvalidNumber(number_string)),
                     }

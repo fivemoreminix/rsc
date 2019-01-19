@@ -10,18 +10,18 @@ use std::iter::Peekable;
 use crate::lexer::*;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expr {
-    BinOp(Operator, Box<Expr>, Box<Expr>),
-    Pow(Box<Expr>, Box<Expr>),
-    Neg(Box<Expr>),
-    Factorial(Box<Expr>),
-    Function(Function, Box<Expr>),
-    Assignment(String, Box<Expr>),
-    Constant(f64),
+pub enum Expr<T: Clone> {
+    BinOp(Operator, Box<Expr<T>>, Box<Expr<T>>),
+    Pow(Box<Expr<T>>, Box<Expr<T>>),
+    Neg(Box<Expr<T>>),
+    Factorial(Box<Expr<T>>),
+    Function(Function, Box<Expr<T>>),
+    Assignment(String, Box<Expr<T>>),
+    Constant(T),
     Identifier(String),
 }
 
-impl Expr {
+impl<T: Clone> Expr<T> {
     /// Replaces all instances of `old` with `new`. This method returns `true` if a value has been replaced, and `false` otherwise.
     /// # Example
     /// One could use this function to replace all references to an identifier "x" with the constant `20`.
@@ -33,7 +33,8 @@ impl Expr {
     /// assert_eq!(computer::compute(&ast), 1600.);
     /// ```
     #[allow(dead_code)]
-    pub fn replace(&mut self, old: &Expr, new: &Expr, ignore_fields: bool) -> bool {
+    pub fn replace(&mut self, old: &Expr<T>, new: &Expr<T>, ignore_fields: bool) -> bool
+            where T: Clone + PartialEq {
         if ignore_fields {
             if std::mem::discriminant(self) == std::mem::discriminant(old) {
                 *self = new.clone();
@@ -70,12 +71,12 @@ impl Expr {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ParserError {
+pub enum ParserError<T> {
     ExpectedClosingParenthesis,
     ExpectedClosingPipe,
     /// Its value is the `Token` that was found instead of a factor.
-    ExpectedFactor(Option<Token>),
-    UnexpectedNumber(Token),
+    ExpectedFactor(Option<Token<T>>),
+    UnexpectedNumber(Token<T>),
 }
 use self::ParserError::*;
 
@@ -83,7 +84,7 @@ use self::ParserError::*;
 /// users accidentally enter an expression such as "2x" (when they mean "2(x)"). But just
 /// as easily detects unknowingly valid expressions like "neg 3" where "neg" is currently
 /// `Token::Identifier`.
-pub fn preprocess(tokens: &[Token]) -> Option<ParserError> {
+pub fn preprocess<T: Clone>(tokens: &[Token<T>]) -> Option<ParserError<T>> {
     // Preprocess and preemptive erroring on inputs like "2x"
     let mut t = tokens.iter().peekable();
     while let Some(tok) = t.next() {
@@ -105,7 +106,7 @@ pub fn preprocess(tokens: &[Token]) -> Option<ParserError> {
 }
 
 /// Turn an array of tokens into an expression, which can be computed into a final number.
-pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
+pub fn parse<T: Clone>(tokens: &[Token<T>]) -> Result<Expr<T>, ParserError<T>> {
     match preprocess(tokens) {
         Some(e) => Err(e),
         None => parse_additive_expr(&mut tokens.iter().peekable()),
@@ -118,13 +119,13 @@ pub fn parse(tokens: &[Token]) -> Result<Expr, ParserError> {
 /// * You have your own preprocess function
 /// If you are not sure, use default `parse` instead.
 #[allow(dead_code)]
-pub fn parse_no_preprocess(tokens: &[Token]) -> Result<Expr, ParserError> {
+pub fn parse_no_preprocess<T: Clone>(tokens: &[Token<T>]) -> Result<Expr<T>, ParserError<T>> {
     parse_additive_expr(&mut tokens.iter().peekable())
 }
 
 /// Additive expressions are things like `expr + expr`, or `expr - expr`. It reads a multiplicative
 /// expr first, which allows precedence to exist.
-fn parse_additive_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_additive_expr<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     let mut expr = parse_multiplicative_expr(tokens)?;
     loop {
         match tokens.peek() {
@@ -140,7 +141,7 @@ fn parse_additive_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, Parse
 }
 
 /// Multiplicative expressions are `expr * expr`, or `expr / expr`.
-fn parse_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_multiplicative_expr<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     let mut expr = parse_parenthetical_multiplicative_expr(tokens)?;
     loop {
         match tokens.peek() {
@@ -157,7 +158,7 @@ fn parse_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr,
 
 /// Parenthetical, multiplicative expressions are just expressions times an expression wrapped in parenthesis: `expr(expr)`, which is
 /// the same as `expr * expr`.
-fn parse_parenthetical_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_parenthetical_multiplicative_expr<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     let mut expr = parse_power_expr(tokens)?;
     loop {
         match tokens.peek() {
@@ -176,7 +177,7 @@ fn parse_parenthetical_multiplicative_expr(tokens: &mut Peekable<Iter<Token>>) -
 }
 
 /// Power expressions are any expressions with an exponential: `factor ^ factor`.
-fn parse_power_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_power_expr<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     let mut expr = parse_factorial_expr(tokens)?;
     loop {
         match tokens.peek() {
@@ -191,7 +192,7 @@ fn parse_power_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserEr
     Ok(expr)
 }
 
-fn parse_factorial_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_factorial_expr<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     let expr = parse_factor(tokens)?;
     match tokens.peek() {
         Some(Token::Operator(Operator::Factorial)) => {
@@ -205,7 +206,7 @@ fn parse_factorial_expr(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, Pars
 /// The most important item -- a factor. A factor is generally the bottom level ideas
 /// like numbers or expressions in parenthesis. The factor makes the recursion in `Expr`
 /// finite.
-fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError> {
+fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> Result<Expr<T>, ParserError<T>> {
     match tokens.next() {
         // Parenthetical expressions such as `(expr)`.
         Some(Token::Operator(Operator::LParen)) => {
@@ -237,7 +238,7 @@ fn parse_factor(tokens: &mut Peekable<Iter<Token>>) -> Result<Expr, ParserError>
         Some(Token::Operator(Operator::Minus)) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?))) // Unary negative expressions like `-factor`.
         }
-        Some(Token::Number(n)) => Ok(Expr::Constant(*n)), // Number constants like `3`, `2.21`, `.34` or `-.2515262`.
+        Some(Token::Number(n)) => Ok(Expr::Constant(n.clone())), // Number constants like `3`, `2.21`, `.34` or `-.2515262`.
         t => Err(ExpectedFactor(t.cloned())), // The token being read isn't in the right place.
     }
 }
