@@ -42,6 +42,8 @@ fn main() {
                 println!("");
             }
             continue;
+        } else if buffer.starts_with(":") {
+            continue;
         }
 
         match tokenize(&buffer, true) {
