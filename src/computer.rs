@@ -11,6 +11,10 @@ use std::ops::*;
 pub trait Num {
     fn zero() -> Self;
     fn one() -> Self;
+
+    fn pi() -> Self;
+    fn e() -> Self;
+
     fn is_integer(&self) -> bool;
     fn sqrt(&self) -> Self;
     fn sin(&self) -> Self;
@@ -52,8 +56,8 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
         Computer {
             variables: {
                 let mut map = HashMap::new();
-                //map.insert(String::from("pi"), std::f64::consts::PI);
-                //map.insert(String::from("e"), std::f64::consts::E);
+                map.insert(String::from("pi"), (T::pi(), true));
+                map.insert(String::from("e"), (T::e(), true));
                 map
             }
         }

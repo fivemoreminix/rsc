@@ -68,6 +68,12 @@ impl Num for f64 {
     fn one() -> Self {
         1.0
     }
+    fn pi() -> Self {
+        std::f64::consts::PI
+    }
+    fn e() -> Self {
+        std::f64::consts::E
+    }
     fn is_integer(&self) -> bool {
         !(self.fract() > 0.0)
     }
