@@ -164,9 +164,22 @@ fn parse_parenthetical_multiplicative_expr<T: Clone>(tokens: &mut Peekable<Iter<
         match tokens.peek() {
             Some(Token::Operator(op)) if op == &Operator::LParen => {
                 tokens.next();
-                let internal_expr = parse_additive_expr(tokens)?;
+                let mut internal_expr = parse_additive_expr(tokens)?;
                 match tokens.next() {
-                    Some(Token::Operator(op)) if op == &Operator::RParen => expr = Expr::BinOp(Operator::Star, Box::new(expr), Box::new(internal_expr)),
+                    Some(Token::Operator(op)) if op == &Operator::RParen => {
+                        loop { // parse '^2' or likewise power expressions on individual parenthesis-covered expressions
+                            match tokens.peek() {
+                                Some(Token::Operator(op)) if op == &Operator::Caret => {
+                                    tokens.next();
+                                    let exponent = parse_factorial_expr(tokens)?;
+                                    internal_expr = Expr::Pow(Box::new(internal_expr), Box::new(exponent));
+                                }
+                                _ => break,
+                            }
+                        }
+
+                        expr = Expr::BinOp(Operator::Star, Box::new(expr), Box::new(internal_expr));
+                    }
                     _ => return Err(ExpectedClosingParenthesis),
                 }
             }
