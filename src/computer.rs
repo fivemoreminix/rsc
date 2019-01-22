@@ -12,9 +12,6 @@ pub trait Num {
     fn zero() -> Self;
     fn one() -> Self;
 
-    fn pi() -> Self;
-    fn e() -> Self;
-
     fn is_integer(&self) -> bool;
     fn sqrt(&self) -> Self;
     fn sin(&self) -> Self;
@@ -52,12 +49,12 @@ pub struct Computer<T> {
 }
 
 impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
-    pub fn new() -> Computer<T> {
+    pub fn new(pi_val: T, e_val: T) -> Computer<T> {
         Computer {
             variables: {
                 let mut map = HashMap::new();
-                map.insert(String::from("pi"), (T::pi(), true));
-                map.insert(String::from("e"), (T::e(), true));
+                map.insert(String::from("pi"), (pi_val, true));
+                map.insert(String::from("e"), (e_val, true));
                 map
             }
         }

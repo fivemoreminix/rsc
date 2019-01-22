@@ -68,12 +68,6 @@ impl Num for f64 {
     fn one() -> Self {
         1.0
     }
-    fn pi() -> Self {
-        std::f64::consts::PI
-    }
-    fn e() -> Self {
-        std::f64::consts::E
-    }
     fn is_integer(&self) -> bool {
         !(self.fract() > 0.0)
     }
@@ -113,10 +107,10 @@ pub enum EvalError<T> {
 /// ```
 /// assert_eq!(eval("3.1 + 2.2"), Ok(5.3));
 /// ```
-pub fn eval<T>(input: &str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + Ord + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
+pub fn eval<T>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + Ord + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
     match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
-            Ok(ast) => match computer::Computer::new().compute(&ast) {
+            Ok(ast) => match computer::Computer::new(pi_val, e_val).compute(&ast) {
                 Ok(num) => Ok(num),
                 Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
             }
