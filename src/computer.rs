@@ -26,6 +26,7 @@ pub trait Num {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputeError {
     InvalidFactorial,
+    VariableIsConstant(String),
     UnrecognizedIdentifier(String),
 }
 use self::ComputeError::*;
@@ -43,7 +44,7 @@ use self::ComputeError::*;
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Computer<T> {
-    pub variables: HashMap<String, T>,
+    pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
 }
 
 impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
@@ -77,7 +78,7 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
             Expr::Constant(num) => Ok(num.clone()),
             Expr::Identifier(id) => {
                 match self.variables.get(id) {
-                    Some(value) => Ok(value.clone()),
+                    Some(value) => Ok(value.0.clone()),
                     None => Err(UnrecognizedIdentifier(id.clone())),
                 }
             }
@@ -107,7 +108,12 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
             }
             Expr::Assignment(id, expr) => {
                 let value = self.compute_expr(&expr)?;
-                self.variables.insert(id.clone(), value.clone());
+                if self.variables.contains_key(id) {
+                    if self.variables.get(id).unwrap().1 == true {
+                        return Err(VariableIsConstant(id.clone()));
+                    }
+                }
+                self.variables.insert(id.clone(), (value.clone(), false));
                 Ok(value)
             }
             Expr::Pow(lexpr, rexpr) => {
@@ -136,7 +142,7 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
         let val = self.compute_expr(expr);
         match &val {
             Ok(n) => {
-                self.variables.insert(String::from("ans"), n.clone());
+                self.variables.insert(String::from("ans"), (n.clone(), true));
             }
             _ => {}
         }
