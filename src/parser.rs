@@ -70,6 +70,13 @@ impl<T: Clone> Expr<T> {
     }
 }
 
+/// # Error Lookup Table
+/// | Error ID                   | Description                                                                  |
+/// |----------------------------|------------------------------------------------------------------------------|
+/// | ExpectedClosingParenthesis | When the input is missing a right parenthesis ')'.                           |
+/// | ExpectedClosingPipe        | When the input is missing a final pipe '|' on an abs expression, like: '|-2' |
+/// | ExpectedFactor             | Expected to find a definite value like a variable or number, but did not.    |
+/// | UnexpectedNumber           | A number was found in place of some other vital structure, ex: '24 3'        |
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParserError<T> {
     ExpectedClosingParenthesis,
