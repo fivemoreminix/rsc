@@ -9,9 +9,12 @@ use std::collections::HashMap;
 use std::ops::*;
 
 pub trait Num {
+    /// Zero, 0, none
     fn zero() -> Self;
+    /// One, 1, singular
     fn one() -> Self;
-
+    /// True if this Num has no decimal attached,
+    /// i.e. 1 or 352, not 1.14 or 352.7.
     fn is_integer(&self) -> bool;
     fn sqrt(&self) -> Self;
     fn sin(&self) -> Self;
@@ -22,8 +25,12 @@ pub trait Num {
     fn pow(&self, other: &Self) -> Self;
 }
 
-//value.fract() > 0.
-
+/// # Error Lookup Table
+/// | Error ID               | Description                                                                             |
+/// |------------------------|-----------------------------------------------------------------------------------------|
+/// | InvalidFactorial       | When trying to compute a factorial with a decimal or a number less than zero.           |
+/// | VariableIsConstant     | When trying to set a constant variable's value.                                         |
+/// | UnrecognizedIdentifier | When an identifier could not be resolved: it was not found in the Computer's variables. |
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputeError {
     InvalidFactorial,
@@ -60,7 +67,8 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
         }
     }
 
-    /// Lexically analyze, parse, and compute the given equation in string form.
+    /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
+    /// in a single helper function.
     pub fn eval(&mut self, expr: &str) -> Result<T, EvalError<T>> where T: std::str::FromStr {
         match tokenize(expr, false) {
             Ok(tokens) => match parse(&tokens) {
