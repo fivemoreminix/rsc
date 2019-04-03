@@ -37,6 +37,11 @@ pub enum Token<T> {
     Identifier(String),
 }
 
+/// # Error Lookup Table
+/// | Error ID         | Description                                                                                           |
+/// |------------------|-------------------------------------------------------------------------------------------------------|
+/// | InvalidCharacter | If the input contains any characters not recognized by the lexer to be numbers or characters, ex: 'ƒ' |
+/// | InvalidNumber    | A number entered invalidly: '2.34.2' or '..3'                                                         |
 #[derive(Debug, Clone, PartialEq)]
 pub enum LexerError {
     InvalidCharacter(char),
