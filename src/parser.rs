@@ -22,7 +22,7 @@ pub enum Expr<T: Clone> {
 }
 
 impl<T: Clone> Expr<T> {
-    /// Replaces all instances of `old` with `new`. This method returns `true` if a value has been replaced, and `false` otherwise.
+    /// Replaces all instances of `old` with `new`. Returns the number of elements that have been replaced.
     /// # Example
     /// One could use this function to replace all references to an identifier "x" with the constant `20`.
     /// ```
@@ -33,35 +33,35 @@ impl<T: Clone> Expr<T> {
     /// assert_eq!(computer::compute(&ast), 1600.);
     /// ```
     #[allow(dead_code)]
-    pub fn replace(&mut self, old: &Expr<T>, new: &Expr<T>, ignore_fields: bool) -> bool
+    pub fn replace(&mut self, old: &Expr<T>, new: &Expr<T>, ignore_fields: bool) -> u32
             where T: Clone + PartialEq {
         if ignore_fields {
             if std::mem::discriminant(self) == std::mem::discriminant(old) {
                 *self = new.clone();
-                return true;
+                return 1;
             }
         } else {
             if self == old {
                 *self = new.clone();
-                return true;
+                return 1;
             }
         }
 
-        let mut replaced = false;
+        let mut replaced = 0;
         match self {
             Expr::BinOp(_, a, b) => {
-                if a.replace(old, new, ignore_fields) { replaced = true; }
-                if b.replace(old, new, ignore_fields) { replaced = true; }
+                replaced += a.replace(old, new, ignore_fields);
+                replaced += b.replace(old, new, ignore_fields);
             }
             Expr::Pow(a, b) => {
-                if a.replace(old, new, ignore_fields) { replaced = true; }
-                if b.replace(old, new, ignore_fields) { replaced = true; }
+                replaced += a.replace(old, new, ignore_fields);
+                replaced += b.replace(old, new, ignore_fields);
             }
             Expr::Neg(a) => {
-                if a.replace(old, new, ignore_fields) { replaced = true; }
+                replaced += a.replace(old, new, ignore_fields);
             }
             Expr::Function(_, a) => {
-                if a.replace(old, new, ignore_fields) { replaced = true; }
+                replaced += a.replace(old, new, ignore_fields);
             }
             _ => {}
         }
