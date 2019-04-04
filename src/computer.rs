@@ -55,13 +55,13 @@ use self::ComputeError::*;
 /// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
 /// ```
 #[derive(Clone)]
-pub struct Computer<T> {
+pub struct Computer<'a, T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
-    pub functions: HashMap<String, Rc<FnOnce(T) -> T>>,
+    pub functions: HashMap<String, &'a FnOnce(T) -> T>,
 }
 
-impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
-    pub fn new(pi_val: T, e_val: T) -> Computer<T> {
+impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<'a, T> {
+    pub fn new(pi_val: T, e_val: T) -> Computer<'a, T> {
         Computer {
             variables: {
                 let mut map = HashMap::new();
@@ -70,8 +70,8 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
                 map
             },
             functions: {
-                let mut map = HashMap::<String, Rc<FnOnce(T) -> T>>::new();
-                map.insert("square".to_owned(), Rc::from(|n: T| n.clone() * n));
+                let mut map = HashMap::<String, &'a FnOnce(T) -> T>::new();
+                map.insert("square".to_owned(), &|n: T| n.clone() * n);
                 map
             },
         }
