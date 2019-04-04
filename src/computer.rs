@@ -41,14 +41,17 @@ use self::ComputeError::*;
 
 /// A Computer object calculates expressions and has variables.
 /// ```
-/// let mut computer = Computer::new();
-/// assert_eq!(computer.eval("a = 2"), Ok(2.0));
-/// assert_eq!(computer.eval("a * 3"), Ok(6.0));
+/// use rsc::{
+///     EvalError,
+///     computer::{Computer, ComputeError},
+/// };
 /// 
-/// assert_eq!(
-///     Computer::new().eval("a"),
-///     Err(EvalError::ComputeError(ComputeError::UnrecognizedIdentifier("a")))
-/// );
+/// let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
+/// assert_eq!(computer.eval("a = 2").unwrap(), 2.0);
+/// assert_eq!(computer.eval("a * 3").unwrap(), 6.0);
+/// 
+/// // Err(EvalError::ComputeError(ComputeError::UnrecognizedIdentifier("a")))
+/// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct Computer<T> {

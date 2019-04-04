@@ -52,6 +52,7 @@ pub enum LexerError {
 /// compared to parsing and computing. It is best to run this function as few times as
 /// reasonably possible.
 /// ```
+/// use rsc::tokenize;
 /// let tokens = tokenize("2 + 2").unwrap();
 /// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
 /// ```

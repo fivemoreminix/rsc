@@ -26,11 +26,16 @@ impl<T: Clone> Expr<T> {
     /// # Example
     /// One could use this function to replace all references to an identifier "x" with the constant `20`.
     /// ```
-    /// let input = "x^2 * 4";
+    /// use rsc::{
+    ///     lexer::tokenize,
+    ///     parser::{parse, Expr},
+    ///     computer::Computer,
+    /// };
+    /// let tokens = lexer::tokenize("x^2 * 4").unwrap();
     /// let replacement = parser::Expr::Constant(20.);
-    /// let mut ast = parser::parse(&lexer::tokenize(&input).unwrap()).unwrap();
+    /// let mut ast = parser::parse(&tokens).unwrap();
     /// ast.replace(&parser::Expr::Identifier(String::from("x")), &replacement, false);
-    /// assert_eq!(computer::compute(&ast), 1600.);
+    /// assert_eq!(Computer::new(std::f64::consts::PI, std::f64::consts::E).compute(&ast), Ok(1600.0);
     /// ```
     #[allow(dead_code)]
     pub fn replace(&mut self, old: &Expr<T>, new: &Expr<T>, ignore_fields: bool) -> u32

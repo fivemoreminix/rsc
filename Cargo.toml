@@ -13,6 +13,9 @@ license = "MIT"
 [lib]
 path = "src/lib.rs"
 
+[dev-dependencies]
+criterion = "0.2"
+
 [dependencies]
 structopt = { version = "0.2", optional = true }
 colored = { version = "1.7", optional = true }
@@ -24,3 +27,7 @@ build-binary = ["structopt", "colored"]
 name = "rsc"
 path = "src/bin/main.rs"
 required-features = ["build-binary"]
+
+[[bench]]
+name = "rsc_benchmark"
+harness = false
