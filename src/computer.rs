@@ -70,8 +70,8 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
                 map
             },
             functions: {
-                let mut map = HashMap::new();
-                map.insert("square".to_owned(), Rc::from(|n| n.clone() * n));
+                let mut map = HashMap::<String, Rc<FnOnce(T) -> T>>::new();
+                map.insert("square".to_owned(), Rc::from(|n: T| n.clone() * n));
                 map
             },
         }
