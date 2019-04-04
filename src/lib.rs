@@ -114,15 +114,3 @@ pub fn eval<T>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>> wher
         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    static INPUT: &'static str = "sqrt((6.1--2.22)^2 + (-24-10.5)^2)";
-
-    #[test]
-    fn it_works() {
-        assert_eq!(INPUT, INPUT);
-    }
-}
