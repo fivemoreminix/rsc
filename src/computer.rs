@@ -7,6 +7,7 @@ use crate::EvalError;
 
 use std::collections::HashMap;
 use std::ops::*;
+use std::rc::Rc;
 
 pub trait Num {
     /// Zero, 0, none
@@ -53,9 +54,10 @@ use self::ComputeError::*;
 /// // Err(EvalError::ComputeError(ComputeError::UnrecognizedIdentifier("a")))
 /// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
 /// ```
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Computer<T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
+    pub functions: HashMap<String, Rc<FnOnce(T) -> T>>,
 }
 
 impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
@@ -66,7 +68,12 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
                 map.insert(String::from("pi"), (pi_val, true));
                 map.insert(String::from("e"), (e_val, true));
                 map
-            }
+            },
+            functions: {
+                let mut map = HashMap::new();
+                map.insert("square".to_owned(), Rc::from(|n| n.clone() * n));
+                map
+            },
         }
     }
 
