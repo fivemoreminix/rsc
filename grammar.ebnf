@@ -5,12 +5,12 @@ power_expr = factorial_expr, { "^", factorial_expr } ;
 factorial_expr = factor, [ "!" ] ;
 factor = "(", additive_expr, ")"
        | "|", additive_expr, "|"
-       | function, factor
+       | function
        | "-", factor
        | constant
        | number
        | identifier, [ "=", additive_expr ] ;
-function = "sqrt" | "sin" | "cos" | "tan" | "log" | "abs" ;
+function = identifier, factor ;
 constant = "pi" | "e" ;
 
 identifier = "A".."z", { "A".."z" } ;

@@ -15,7 +15,7 @@ pub enum Expr<T: Clone> {
     Pow(Box<Expr<T>>, Box<Expr<T>>),
     Neg(Box<Expr<T>>),
     Factorial(Box<Expr<T>>),
-    Function(Function, Box<Expr<T>>),
+    Function(String, Box<Expr<T>>),
     Assignment(String, Box<Expr<T>>),
     Constant(T),
     Identifier(String),
@@ -103,10 +103,10 @@ pub fn preprocess<T: Clone>(tokens: &[Token<T>]) -> Option<ParserError<T>> {
     let mut t = tokens.iter().peekable();
     while let Some(tok) = t.next() {
         match tok {
-            Token::Number(_) | Token::Identifier(_) => {
+            Token::Number(_) => {
                 if let Some(peek_tok) = t.peek() {
                     match peek_tok {
-                        Token::Number(_) | Token::Identifier(_) => {
+                        Token::Identifier(_) => {
                             return Some(UnexpectedNumber((*peek_tok).clone()));
                         }
                         _ => {}
@@ -243,23 +243,53 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
                 _ => Err(ExpectedClosingParenthesis),
             }
         }
-        Some(Token::Operator(Operator::Pipe)) => {
-            let expr = parse_additive_expr(tokens)?;
-            match tokens.next() {
-                Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(Function::Abs, Box::new(expr))),
-                _ => return Err(ExpectedClosingPipe),
-            }
-        }
-        Some(Token::Function(function)) => {
-            Ok(Expr::Function(*function, Box::new(parse_factor(tokens)?))) // All functions assume the next factor is its operand.
-        }
+        // Some(Token::Operator(Operator::Pipe)) => {
+        //     let expr = parse_additive_expr(tokens)?;
+        //     match tokens.next() {
+        //         Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(Function::Abs, Box::new(expr))),
+        //         _ => return Err(ExpectedClosingPipe),
+        //     }
+        // }
         Some(Token::Identifier(id)) => {
             match tokens.peek() {
-                Some(Token::Operator(Operator::Equals)) => {
-                    tokens.next();
-                    Ok(Expr::Assignment(id.clone(), Box::new(parse_additive_expr(tokens)?)))
+                // Functions (if next is LP or PIPE or NUM or ID)
+                Some(Token::Operator(Operator::LParen)) => {
+                    tokens.next(); // Consume '('
+                    let expr = parse_additive_expr(tokens)?;
+                    match tokens.next() {
+                        Some(Token::Operator(Operator::RParen)) => Ok(Expr::Function(id.clone(), Box::new(expr))),
+                        _ => Err(ExpectedClosingParenthesis),
+                    }
                 }
-                _ => Ok(Expr::Identifier(id.clone())),
+                Some(Token::Operator(Operator::Pipe)) => {
+                    tokens.next(); // Consume '|'
+                    let expr = parse_additive_expr(tokens)?;
+                    match tokens.next() {
+                        Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Function(id.clone(), Box::new(expr))),
+                        _ => return Err(ExpectedClosingPipe),
+                    }
+                }
+                Some(Token::Operator(Operator::Minus)) => {
+                    tokens.next(); // Consume '-'
+                    Ok(Expr::Function(id.clone(), Box::new(Expr::Neg(Box::new(parse_factor(tokens)?)))))
+                }
+                Some(Token::Number(n)) => {
+                    tokens.next(); // Consume number
+                    Ok(Expr::Function(id.clone(), Box::new(Expr::Constant(n.clone()))))
+                }
+                Some(Token::Identifier(other_id)) => { // Function-in-a-function?
+                    tokens.next(); // Consume identifier
+                    Ok(Expr::Function(id.clone(), Box::new(Expr::Function(other_id.clone(), Box::new(parse_factor(tokens)?)))))
+                }
+
+                // Nope, definitely not a function: this is certainly either variable recall or variable assignment.
+                t => match t {
+                    Some(Token::Operator(Operator::Equals)) => {
+                        tokens.next();
+                        Ok(Expr::Assignment(id.clone(), Box::new(parse_additive_expr(tokens)?)))
+                    }
+                    _ => Ok(Expr::Identifier(id.clone())),
+                }
             }
         }
         Some(Token::Operator(Operator::Minus)) => {

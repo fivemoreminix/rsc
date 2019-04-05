@@ -57,7 +57,7 @@ use self::ComputeError::*;
 #[derive(Clone)]
 pub struct Computer<'a, T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
-    pub functions: HashMap<String, &'a FnOnce(T) -> T>,
+    pub functions: HashMap<String, &'a Fn(T) -> T>,
 }
 
 impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<'a, T> {
@@ -70,7 +70,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                 map
             },
             functions: {
-                let mut map = HashMap::<String, &'a FnOnce(T) -> T>::new();
+                let mut map = HashMap::<String, &'a Fn(T) -> T>::new();
                 map.insert("square".to_owned(), &|n: T| n.clone() * n);
                 map
             },
@@ -114,16 +114,23 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                     _ => unimplemented!(),
                 }
             }
-            Expr::Function(function, expr) => {
-                let num = self.compute_expr(&expr)?;
-                Ok(match function {
-                    Function::Sqrt => num.sqrt(),
-                    Function::Sin => num.sin(),
-                    Function::Cos => num.cos(),
-                    Function::Tan => num.tan(),
-                    Function::Log => num.log(),
-                    Function::Abs => num.abs(),
-                })
+            // Expr::Function(function, expr) => {
+            //     let num = self.compute_expr(&expr)?;
+            //     Ok(match function {
+            //         Function::Sqrt => num.sqrt(),
+            //         Function::Sin => num.sin(),
+            //         Function::Cos => num.cos(),
+            //         Function::Tan => num.tan(),
+            //         Function::Log => num.log(),
+            //         Function::Abs => num.abs(),
+            //     })
+            // }
+            Expr::Function(id, expr) => {
+                let value = self.compute_expr(&expr)?;
+                match self.functions.get(id) {
+                    Some(func) => Ok(func(value)),
+                    None => Err(UnrecognizedIdentifier(id.clone())), // TODO: UnrecognizedFunctionIdentifier
+                }
             }
             Expr::Assignment(id, expr) => {
                 let value = self.compute_expr(&expr)?;
