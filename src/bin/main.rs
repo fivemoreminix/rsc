@@ -25,7 +25,7 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
+    let mut computer: Computer<f64> = Default::default();
 
     loop {
         print!("{}", if opt.no_color { ">".normal() } else { ">".blue() });

@@ -16,24 +16,10 @@ pub enum Operator {
 }
 use self::Operator::*;
 
-/// All functions assume the next factor immediately following to be their argument.
-/// Functions cannot contain more than a single argument. This may be changed in the future.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Function {
-    Sqrt,
-    Sin,
-    Cos,
-    Tan,
-    Log,
-    Abs,
-}
-use self::Function::*;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token<T> {
     Number(T),
     Operator(Operator),
-    Function(Function),
     Identifier(String),
 }
 
@@ -103,17 +89,7 @@ pub fn tokenize<T>(input: &str, case_sensitive: bool) -> Result<Vec<Token<T>>, L
                         }
                     }
 
-                    match &(if case_sensitive { full_identifier } else { full_identifier.to_lowercase() })[..] {
-                        // Functions
-                        "sqrt" => tokens.push(Token::Function(Sqrt)),
-                        "sin" => tokens.push(Token::Function(Sin)),
-                        "cos" => tokens.push(Token::Function(Cos)),
-                        "tan" => tokens.push(Token::Function(Tan)),
-                        "log" => tokens.push(Token::Function(Log)),
-                        "abs" => tokens.push(Token::Function(Abs)),
-                        
-                        id => tokens.push(Token::Identifier(id.to_owned())),
-                    }
+                    tokens.push(Token::Identifier((if case_sensitive { full_identifier } else { full_identifier.to_lowercase() }).to_owned()));
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }

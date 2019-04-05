@@ -134,17 +134,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                     _ => unimplemented!(),
                 }
             }
-            // Expr::Function(function, expr) => {
-            //     let num = self.compute_expr(&expr)?;
-            //     Ok(match function {
-            //         Function::Sqrt => num.sqrt(),
-            //         Function::Sin => num.sin(),
-            //         Function::Cos => num.cos(),
-            //         Function::Tan => num.tan(),
-            //         Function::Log => num.log(),
-            //         Function::Abs => num.abs(),
-            //     })
-            // }
+            Expr::Abs(expr) => Ok(self.compute_expr(expr)?.abs()),
             Expr::Function(id, expr) => {
                 let value = self.compute_expr(&expr)?;
                 match self.functions.get(id) {
