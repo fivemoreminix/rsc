@@ -32,11 +32,13 @@ pub trait Num {
 /// | InvalidFactorial       | When trying to compute a factorial with a decimal or a number less than zero.           |
 /// | VariableIsConstant     | When trying to set a constant variable's value.                                         |
 /// | UnrecognizedIdentifier | When an identifier could not be resolved: it was not found in the Computer's variables. |
+/// | UnrecognizedFunctionIdentifier | When the identifier could not be found in the Computer's functions.             |
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputeError {
     InvalidFactorial,
     VariableIsConstant(String),
     UnrecognizedIdentifier(String),
+    UnrecognizedFunctionIdentifier(String),
 }
 use self::ComputeError::*;
 
@@ -60,6 +62,28 @@ pub struct Computer<'a, T> {
     pub functions: HashMap<String, &'a Fn(T) -> T>,
 }
 
+impl<'a> std::default::Default for Computer<'a, f64> {
+    fn default() -> Self {
+        Self {
+            variables: {
+                let mut map = HashMap::new();
+                map.insert(String::from("pi"), (std::f64::consts::PI, true));
+                map.insert(String::from("e"), (std::f64::consts::E, true));
+                map
+            },
+            functions: {
+                let mut map = HashMap::<String, &'a Fn(f64) -> f64>::new();
+                map.insert("sqrt".to_owned(), &|n| n.sqrt());
+                map.insert("sin".to_owned(), &|n| n.sin());
+                map.insert("cos".to_owned(), &|n| n.cos());
+                map.insert("tan".to_owned(), &|n| n.tan());
+                map.insert("log".to_owned(), &|n| n.log10());
+                map
+            },
+        }
+    }
+}
+
 impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<'a, T> {
     pub fn new(pi_val: T, e_val: T) -> Computer<'a, T> {
         Computer {
@@ -69,11 +93,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                 map.insert(String::from("e"), (e_val, true));
                 map
             },
-            functions: {
-                let mut map = HashMap::<String, &'a Fn(T) -> T>::new();
-                map.insert("square".to_owned(), &|n: T| n.clone() * n);
-                map
-            },
+            functions: HashMap::new(),
         }
     }
 
@@ -129,7 +149,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                 let value = self.compute_expr(&expr)?;
                 match self.functions.get(id) {
                     Some(func) => Ok(func(value)),
-                    None => Err(UnrecognizedIdentifier(id.clone())), // TODO: UnrecognizedFunctionIdentifier
+                    None => Err(UnrecognizedFunctionIdentifier(id.clone())), // TODO: UnrecognizedFunctionIdentifier
                 }
             }
             Expr::Assignment(id, expr) => {
