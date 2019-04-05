@@ -7,7 +7,6 @@ use crate::EvalError;
 
 use std::collections::HashMap;
 use std::ops::*;
-use std::rc::Rc;
 
 pub trait Num {
     /// Zero, 0, none
@@ -17,11 +16,6 @@ pub trait Num {
     /// True if this Num has no decimal attached,
     /// i.e. 1 or 352, not 1.14 or 352.7.
     fn is_integer(&self) -> bool;
-    fn sqrt(&self) -> Self;
-    fn sin(&self) -> Self;
-    fn cos(&self) -> Self;
-    fn tan(&self) -> Self;
-    fn log(&self) -> Self;
     fn abs(&self) -> Self;
     fn pow(&self, other: &Self) -> Self;
 }

@@ -63,22 +63,7 @@ impl Num for f64 {
         1.0
     }
     fn is_integer(&self) -> bool {
-        !(self.fract() > 0.0)
-    }
-    fn sqrt(&self) -> Self {
-        f64::sqrt(*self)
-    }
-    fn sin(&self) -> Self {
-        f64::sin(*self)
-    }
-    fn cos(&self) -> Self {
-        f64::cos(*self)
-    }
-    fn tan(&self) -> Self {
-        f64::tan(*self)
-    }
-    fn log(&self) -> Self {
-        self.log10()
+        self.fract() <= 0.0
     }
     fn abs(&self) -> Self {
         f64::abs(*self)
