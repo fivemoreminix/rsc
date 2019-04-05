@@ -149,7 +149,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                 let value = self.compute_expr(&expr)?;
                 match self.functions.get(id) {
                     Some(func) => Ok(func(value)),
-                    None => Err(UnrecognizedFunctionIdentifier(id.clone())), // TODO: UnrecognizedFunctionIdentifier
+                    None => Err(UnrecognizedFunctionIdentifier(id.clone())),
                 }
             }
             Expr::Assignment(id, expr) => {
