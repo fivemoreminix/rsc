@@ -253,8 +253,7 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
         }
         Some(Token::Identifier(id)) => {
             match tokens.peek() {
-                // Functions (if next is LP or PIPE or NUM or ID)
-                Some(Token::Operator(Operator::LParen)) => {
+                Some(Token::Operator(Operator::LParen)) => { // CONSTRUCT FUNCTION_OR_ID
                     tokens.next(); // Consume '('
                     let expr = parse_additive_expr(tokens)?;
                     match tokens.next() {
@@ -262,6 +261,8 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
                         _ => Err(ExpectedClosingParenthesis),
                     }
                 }
+
+                // Functions (if next is LP or PIPE or NUM or ID)
                 Some(Token::Operator(Operator::Pipe)) => {
                     tokens.next(); // Consume '|'
                     let expr = parse_additive_expr(tokens)?;
@@ -270,25 +271,26 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
                         _ => return Err(ExpectedClosingPipe),
                     }
                 }
-                Some(Token::Operator(Operator::Minus)) => {
-                    tokens.next(); // Consume '-'
-                    Ok(Expr::Function(id.clone(), Box::new(Expr::Neg(Box::new(parse_factor(tokens)?)))))
-                }
-                Some(Token::Number(n)) => {
-                    tokens.next(); // Consume number
-                    Ok(Expr::Function(id.clone(), Box::new(Expr::Constant(n.clone()))))
-                }
+                // Some(Token::Operator(Operator::Minus)) => {
+                //     tokens.next(); // Consume '-'
+                //     Ok(Expr::Function(id.clone(), Box::new(Expr::Neg(Box::new(parse_factor(tokens)?)))))
+                // }
+                // Some(Token::Number(n)) => {
+                //     tokens.next(); // Consume number
+                //     Ok(Expr::Function(id.clone(), Box::new(Expr::Constant(n.clone()))))
+                // }
                 Some(Token::Identifier(_)) => { // Function-in-a-function OR a variable being used as a function argument
                     Ok(Expr::Function(id.clone(), Box::new(parse_factor(tokens)?)))
                 }
 
-                // Nope, definitely not a function: this is certainly either variable recall or variable assignment.
+                // This is probably variable recall or variable assignment, but there is still hope...
                 t => match t {
                     Some(Token::Operator(Operator::Equals)) => {
                         tokens.next();
                         Ok(Expr::Assignment(id.clone(), Box::new(parse_additive_expr(tokens)?)))
                     }
-                    _ => Ok(Expr::Identifier(id.clone())),
+                    None => Ok(Expr::Identifier(id.clone())),
+                    _ => Ok(Expr::Function(id.clone(), Box::new(parse_additive_expr(tokens)?))), // <--- HOPE
                 }
             }
         }
