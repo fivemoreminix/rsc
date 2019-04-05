@@ -83,12 +83,14 @@ impl<T: Clone> Expr<T> {
 /// | ExpectedClosingPipe        | When the input is missing a final pipe '|' on an abs expression, like: '|-2' |
 /// | ExpectedFactor             | Expected to find a definite value like a variable or number, but did not.    |
 /// | UnexpectedNumber           | A number was found in place of some other vital structure, ex: '24 3'        |
+/// | UnexpectedToken            | A token has found to be remaining even after analysis: we don't know what to do with it.|
 #[derive(Debug, Clone, PartialEq)]
-pub enum ParserError<T> {
+pub enum ParserError<T: Clone> {
     ExpectedClosingParenthesis,
     ExpectedClosingPipe,
     /// Its value is the `Token` that was found instead of a factor.
     ExpectedFactor(Option<Token<T>>),
+    UnexpectedToken(Expr<T>, Vec<Token<T>>), // Collected only after parsing has finished... trailing tokens
     UnexpectedNumber(Token<T>),
 }
 use self::ParserError::*;
@@ -122,9 +124,26 @@ pub fn preprocess<T: Clone>(tokens: &[Token<T>]) -> Option<ParserError<T>> {
 
 /// Turn an array of tokens into an expression, which can be computed into a final number.
 pub fn parse<T: Clone>(tokens: &[Token<T>]) -> ParserResult<T> {
+    let mut t = tokens.iter().peekable();
     match preprocess(tokens) {
         Some(e) => Err(e),
-        None => parse_additive_expr(&mut tokens.iter().peekable()),
+        None => {
+            let expr = parse_additive_expr(&mut t);
+            if expr.is_ok() {
+                // Are there any remaining tokens? That's an unexpected token error...
+                if let Some(_) = t.peek() {
+                    let mut all_tokens = vec!(t.next().unwrap().clone());
+                    while let Some(next) = t.next() { // Collect every offending token
+                        all_tokens.push(next.clone());
+                    }
+                    Err(UnexpectedToken(expr.unwrap(), all_tokens))
+                } else {
+                    expr
+                }
+            } else {
+                expr
+            }
+        }
     }
 }
 
@@ -271,14 +290,14 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
                         _ => return Err(ExpectedClosingPipe),
                     }
                 }
-                // Some(Token::Operator(Operator::Minus)) => {
+                // Some(Token::Operator(Operator::Minus)) => { Subtraction / negative arguments is probably a mixed case
                 //     tokens.next(); // Consume '-'
                 //     Ok(Expr::Function(id.clone(), Box::new(Expr::Neg(Box::new(parse_factor(tokens)?)))))
                 // }
-                // Some(Token::Number(n)) => {
-                //     tokens.next(); // Consume number
-                //     Ok(Expr::Function(id.clone(), Box::new(Expr::Constant(n.clone()))))
-                // }
+                Some(Token::Number(n)) => {
+                    tokens.next(); // Consume number
+                    Ok(Expr::Function(id.clone(), Box::new(Expr::Constant(n.clone()))))
+                }
                 Some(Token::Identifier(_)) => { // Function-in-a-function OR a variable being used as a function argument
                     Ok(Expr::Function(id.clone(), Box::new(parse_factor(tokens)?)))
                 }
@@ -289,8 +308,9 @@ fn parse_factor<T: Clone>(tokens: &mut Peekable<Iter<Token<T>>>) -> ParserResult
                         tokens.next();
                         Ok(Expr::Assignment(id.clone(), Box::new(parse_additive_expr(tokens)?)))
                     }
-                    None => Ok(Expr::Identifier(id.clone())),
-                    _ => Ok(Expr::Function(id.clone(), Box::new(parse_additive_expr(tokens)?))), // <--- HOPE
+                    _ => Ok(Expr::Identifier(id.clone())),
+                    //None => Ok(Expr::Identifier(id.clone())),
+                    //_ => Ok(Expr::Function(id.clone(), Box::new(parse_additive_expr(tokens)?))), // <--- HOPE
                 }
             }
         }
