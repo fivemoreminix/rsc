@@ -1,10 +1,10 @@
 //! This crate is specifically used for one thing: turning expressions inside of a string
 //! into a value. This crate acts as a scientific calculator, and includes several functions.
-//! 
+//!
 //! If you need a portion of the calculator changed or removed, please fork it, and make your
 //! changes. We encourage others to change RSC to their liking. You do not need to attribute
 //! anything to us. This is MIT licensed software.
-//! 
+//!
 //! Anyone can easily create a [Calculator](computer/struct.Computer.html) and begin working with expressions. Calculators
 //! also remember variables using a HashMap. You can create and begin using the Calculator like so:
 //! ```
@@ -17,7 +17,7 @@
 //!     assert!(c.eval("x^2").unwrap() == 25.0);
 //! }
 //! ```
-//! 
+//!
 //! In most cases a simple `eval` should be all you need, but just as many times you may need
 //! to directly access the tokens and AST. Some reasons may include:
 //! * For performance or caching; lexing and parsing an expression only once, to calculate it later hundreds
@@ -29,7 +29,7 @@
 //!     parser::{parse, Expr},
 //!     computer::Computer,
 //! };
-//! 
+//!
 //! fn main() {
 //!     let tokens = tokenize("x^2", true).unwrap();
 //!     let ast = parse(&tokens).unwrap();
@@ -41,16 +41,16 @@
 //!         println!("{}", computer.compute(&ast).unwrap());
 //!     }
 //! }
-//! 
+//!
 //! // Output:
 //! // 4
 //! // 9
 //! // 16
 //! // 25
 //! ```
+pub mod computer;
 pub mod lexer;
 pub mod parser;
-pub mod computer;
 
 use crate::computer::Num;
 use std::ops::*;
@@ -102,15 +102,26 @@ pub enum EvalError<T> {
 /// use rsc::eval;
 /// eval("3.1 + 2.2"); // Ok(5.3)
 /// ```
-pub fn eval<T>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
+pub fn eval<T>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>>
+where
+    T: Num
+        + std::str::FromStr
+        + Clone
+        + PartialOrd
+        + Neg<Output = T>
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
+{
     match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new(pi_val, e_val).compute(&ast) {
                 Ok(num) => Ok(num),
                 Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
-            }
+            },
             Err(parser_err) => Err(EvalError::ParserError(parser_err)),
-        }
+        },
         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
     }
 }

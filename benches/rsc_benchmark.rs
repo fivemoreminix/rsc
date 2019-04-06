@@ -1,11 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion, Benchmark};
+use criterion::{criterion_group, criterion_main, Benchmark, Criterion};
 
-use rsc::{
-    eval,
-    lexer::tokenize,
-    parser::parse,
-    computer::Computer,
-};
+use rsc::{computer::Computer, eval, lexer::tokenize, parser::parse};
 
 const INPUT: &'static str = "sqrt((6.1--2.22)^2 + (-24-10.5)^2)";
 
@@ -26,8 +21,12 @@ fn criterion_benchmark(c: &mut Criterion) {
     // All at once
     c.bench(
         "eval",
-        Benchmark::new("indirectly", |b| b.iter(|| eval(INPUT, std::f64::consts::PI, std::f64::consts::E)))
-        .with_function("directly", |b| b.iter(|| Computer::new(std::f64::consts::PI, std::f64::consts::E).eval(INPUT)))
+        Benchmark::new("indirectly", |b| {
+            b.iter(|| eval(INPUT, std::f64::consts::PI, std::f64::consts::E))
+        })
+        .with_function("directly", |b| {
+            b.iter(|| Computer::new(std::f64::consts::PI, std::f64::consts::E).eval(INPUT))
+        }),
     );
 }
 
