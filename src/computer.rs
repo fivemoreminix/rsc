@@ -45,11 +45,11 @@ use self::ComputeError::*;
 ///     EvalError,
 ///     computer::{Computer, ComputeError},
 /// };
-/// 
+///
 /// let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
 /// assert_eq!(computer.eval("a = 2").unwrap(), 2.0);
 /// assert_eq!(computer.eval("a * 3").unwrap(), 6.0);
-/// 
+///
 /// // Err(EvalError::ComputeError(ComputeError::UnrecognizedIdentifier("a")))
 /// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
 /// ```
@@ -58,7 +58,17 @@ pub struct Computer<T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
 }
 
-impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<T> {
+impl<
+        T: Num
+            + Clone
+            + PartialOrd
+            + Neg<Output = T>
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    > Computer<T>
+{
     pub fn new(pi_val: T, e_val: T) -> Computer<T> {
         Computer {
             variables: {
@@ -66,21 +76,24 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
                 map.insert(String::from("pi"), (pi_val, true));
                 map.insert(String::from("e"), (e_val, true));
                 map
-            }
+            },
         }
     }
 
     /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
     /// in a single helper function.
-    pub fn eval(&mut self, expr: &str) -> Result<T, EvalError<T>> where T: std::str::FromStr {
+    pub fn eval(&mut self, expr: &str) -> Result<T, EvalError<T>>
+    where
+        T: std::str::FromStr,
+    {
         match tokenize(expr, false) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => match self.compute(&ast) {
                     Ok(num) => Ok(num),
                     Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
-                }
+                },
                 Err(parser_err) => Err(EvalError::ParserError(parser_err)),
-            }
+            },
             Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
         }
     }
@@ -88,12 +101,10 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
     fn compute_expr(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
         match expr {
             Expr::Constant(num) => Ok(num.clone()),
-            Expr::Identifier(id) => {
-                match self.variables.get(id) {
-                    Some(value) => Ok(value.0.clone()),
-                    None => Err(UnrecognizedIdentifier(id.clone())),
-                }
-            }
+            Expr::Identifier(id) => match self.variables.get(id) {
+                Some(value) => Ok(value.0.clone()),
+                None => Err(UnrecognizedIdentifier(id.clone())),
+            },
             Expr::Neg(expr) => Ok(-self.compute_expr(expr)?),
             Expr::BinOp(op, lexpr, rexpr) => {
                 let lnum = self.compute_expr(&lexpr)?;
@@ -154,7 +165,8 @@ impl<T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Outpu
         let val = self.compute_expr(expr);
         match &val {
             Ok(n) => {
-                self.variables.insert(String::from("ans"), (n.clone(), true));
+                self.variables
+                    .insert(String::from("ans"), (n.clone(), true));
             }
             _ => {}
         }

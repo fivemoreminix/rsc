@@ -1,5 +1,5 @@
-extern crate structopt;
 extern crate colored;
+extern crate structopt;
 
 use std::io::prelude::*;
 
@@ -7,12 +7,14 @@ use structopt::StructOpt;
 
 use colored::Colorize;
 
+use rsc::computer::*;
 use rsc::lexer::*;
 use rsc::parser::*;
-use rsc::computer::*;
 
 #[derive(StructOpt)]
-#[structopt(about = "A scientific calculator for the terminal.\nManual: https://github.com/asmoaesl/rsc/wiki")]
+#[structopt(
+    about = "A scientific calculator for the terminal.\nManual: https://github.com/asmoaesl/rsc/wiki"
+)]
 struct Opt {
     #[structopt(long = "ast", help = "Prints abstract syntax tree")]
     ast: bool,
@@ -28,7 +30,14 @@ fn main() {
     let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
 
     loop {
-        print!("{}", if opt.no_color { ">".normal() } else { ">".blue() });
+        print!(
+            "{}",
+            if opt.no_color {
+                ">".normal()
+            } else {
+                ">".blue()
+            }
+        );
         std::io::stdout().flush().unwrap();
 
         let mut buffer = String::new();
@@ -47,43 +56,47 @@ fn main() {
         }
 
         match tokenize::<f64>(&buffer, true) {
-            Ok(tokens) => {
-                match parse(&tokens) {
-                    Ok(ast) => {
-                        if opt.ast {
-                            println!("{:#?}", ast);
-                        }
-                        
-                        match computer.compute(&ast) {
-                            Ok(num) => {
-                                if opt.vars {
-                                    println!("{:#?}", computer.variables);
-                                }
-                                if opt.no_color {
-                                    println!("{}", num);
-                                } else {
-                                    println!("{}", num.to_string().yellow());
-                                }
+            Ok(tokens) => match parse(&tokens) {
+                Ok(ast) => {
+                    if opt.ast {
+                        println!("{:#?}", ast);
+                    }
+
+                    match computer.compute(&ast) {
+                        Ok(num) => {
+                            if opt.vars {
+                                println!("{:#?}", computer.variables);
                             }
-                            Err(err) => if opt.no_color {
+                            if opt.no_color {
+                                println!("{}", num);
+                            } else {
+                                println!("{}", num.to_string().yellow());
+                            }
+                        }
+                        Err(err) => {
+                            if opt.no_color {
                                 println!("Computation error: {:?}", err)
                             } else {
                                 println!("{}", format!("Computation error: {:?}", err).red())
-                            },
+                            }
                         }
                     }
-                    Err(err) => if opt.no_color {
+                }
+                Err(err) => {
+                    if opt.no_color {
                         println!("Parser error: {:?}", err)
                     } else {
                         println!("{}", format!("Parser error: {:?}", err).red())
-                    },
+                    }
+                }
+            },
+            Err(err) => {
+                if opt.no_color {
+                    println!("Lexer error: {:?}", err)
+                } else {
+                    println!("{}", format!("Lexer error: {:?}", err).red())
                 }
             }
-            Err(err) => if opt.no_color {
-                println!("Lexer error: {:?}", err)
-            } else {
-                println!("{}", format!("Lexer error: {:?}", err).red())
-            },
         }
     }
 }
