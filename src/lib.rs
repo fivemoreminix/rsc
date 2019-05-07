@@ -74,7 +74,7 @@ impl Num for f64 {
 }
 
 #[derive(Debug, Clone)]
-pub enum EvalError<T> {
+pub enum EvalError<T: Clone + std::fmt::Debug> {
     ComputeError(computer::ComputeError),
     ParserError(parser::ParserError<T>),
     LexerError(lexer::LexerError),
@@ -87,7 +87,7 @@ pub enum EvalError<T> {
 /// use rsc::eval;
 /// eval("3.1 + 2.2"); // Ok(5.3)
 /// ```
-pub fn eval<T>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
+pub fn eval<T: std::fmt::Debug>(input: &str, pi_val: T, e_val: T) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
     match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new(pi_val, e_val).compute(&ast) {
