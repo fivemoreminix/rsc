@@ -38,7 +38,7 @@ fn main() {
         if &buffer[..] == "quit" || &buffer[..] == "exit" {
             break;
         } else if &buffer[..] == "clear" {
-            for _ in 0..50 {
+            for _ in 0..100 {
                 println!("");
             }
             continue;
