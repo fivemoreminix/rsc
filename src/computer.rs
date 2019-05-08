@@ -56,6 +56,11 @@ pub struct Computer<'a, T> {
     pub functions: HashMap<String, &'a Fn(T) -> T>,
 }
 
+pub enum ComputerResult<T> {
+    Number(T),
+    Frac(T, T),
+}
+
 impl<'a> std::default::Default for Computer<'a, f64> {
     fn default() -> Self {
         Self {
@@ -72,8 +77,45 @@ impl<'a> std::default::Default for Computer<'a, f64> {
                 map.insert("cos".to_owned(), &|n| n.cos());
                 map.insert("tan".to_owned(), &|n| n.tan());
                 map.insert("log".to_owned(), &|n| n.log10());
+                map.insert("deci".to_owned(), &|n| {
+                    let div = float_to_fraction(n, 0.000001);
+                    div.0 / div.1
+                });
+                map.insert("frac".to_owned(), &|n| n);
                 map
             },
+        }
+    }
+}
+
+pub fn float_to_fraction(mut f: f64, error: f64) -> (f64, f64) {
+    let n = f.floor();
+    f -= n as f64;
+
+    if f < error {
+        return (n as f64, 1.0);
+    } else if 1.0 - error < f {
+        return (n as f64 + 1.0, 1.0);
+    }
+
+    let mut lower_n: f64 = 0.0;
+    let mut lower_d: f64 = 1.0;
+
+    let mut upper_n: f64 = 1.0;
+    let mut upper_d: f64 = 1.0;
+
+    loop {
+        let middle_n = lower_n + upper_n;
+        let middle_d = lower_d + upper_d;
+
+        if middle_d * (f + error) < middle_n {
+            upper_n = middle_n;
+            upper_d = middle_d;
+        } else if middle_n < (f - error) * middle_d {
+            lower_n = middle_n;
+            lower_d = middle_d;
+        } else {
+            return (n * middle_d + middle_n, middle_d);
         }
     }
 }
@@ -87,7 +129,11 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
                 map.insert(String::from("e"), (e_val, true));
                 map
             },
-            functions: HashMap::new(),
+            functions: {
+                let mut map = HashMap::<String, &'a Fn(T) -> T>::new();
+                
+                map
+            },
         }
     }
 
