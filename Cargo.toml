@@ -17,6 +17,7 @@ path = "src/lib.rs"
 criterion = "0.2"
 
 [dependencies]
+# dependencies for the binary version
 structopt = { version = "0.2", optional = true }
 colored = { version = "1.7", optional = true }
 
