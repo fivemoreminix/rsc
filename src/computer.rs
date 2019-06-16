@@ -161,6 +161,11 @@ impl<
     }
 
     /// Solve an already parsed `Expr` (AST).
+    /// ```
+    /// let ast = parse(/*...*/);
+    /// // Using this function to create the result from the `Expr`.
+    /// let result = compute(&ast).unwrap();
+    /// ```
     pub fn compute(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
         let val = self.compute_expr(expr);
         match &val {
