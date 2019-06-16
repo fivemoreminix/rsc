@@ -12,7 +12,7 @@ RSC is ~500 lines of Rust code.
 
 # Performance
 RSC computes next to instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
-```rs
+```
 PS C:\Users\Luke\Documents\Projects\rsc> cargo bench
     Finished release [optimized] target(s) in 0.02s
      Running target\release\deps\rsc-74a7d2c06ab98eee.exe
@@ -57,7 +57,7 @@ Compute error: UnrecognizedIdentifier("b")
 ```
 ## Library
 RSC is very painless to use. For simple, one-off expression solving:
-```rs
+```rust
 extern crate rsc;
 
 use rsc::eval;
@@ -83,7 +83,7 @@ fn main() {
 ```
 ## Debug
 RSC can be run with the `ast` flag and show the internal expression that was created by the parser. This is most commonly used for entertainment purposes 😛.
-```
+```rust
 PS C:\Users\Luke> rsc ast
 >(a = 2)^3
 Pow(
@@ -100,7 +100,7 @@ Pow(
 8
 ```
 ## Errors
-```
+```rust
 PS C:\Users\lukew> rsc
 >oops
 Lexer error: InvalidIdentifier("oops")
