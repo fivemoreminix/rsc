@@ -7,9 +7,6 @@ RSC is also designed with the goal to not become bloated software. **RSC will no
 # Obtaining RSC
 If you would like to install RSC as a program onto your computer, there is information [here](https://github.com/asmoaesl/rsc/wiki/Executable).
 
-# Size
-RSC is ~500 lines of Rust code.
-
 # Performance
 RSC computes next to instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
 ```
@@ -70,8 +67,6 @@ fn main() {
 ```
 In order to keep variables, you must create a `Computer` instance:
 ```rs
-extern crate rsc;
-
 use rsc::computer::Computer;
 
 fn main() {

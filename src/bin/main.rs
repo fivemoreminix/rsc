@@ -27,7 +27,8 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
+    // let mut computer: Computer<f64> = Default::default();
+    let mut computer = Computer::<f64>::default();
 
     loop {
         print!(
@@ -47,7 +48,7 @@ fn main() {
         if &buffer[..] == "quit" || &buffer[..] == "exit" {
             break;
         } else if &buffer[..] == "clear" {
-            for _ in 0..50 {
+            for _ in 0..100 {
                 println!("");
             }
             continue;
