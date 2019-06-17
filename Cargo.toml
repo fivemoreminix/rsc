@@ -1,9 +1,9 @@
 [package]
 name = "rsc"
-version = "1.2.0"
+version = "2.0.0"
 edition = "2018"
-authors = ["Luke Wilson"]
-description = "A pure-Rust handwritten scientific calculator for solving math equations in strings."
+authors = ["Luke I. Wilson"]
+description = "A zero-dependency calculator for solving scientific math equations in strings."
 repository = "https://github.com/asmoaesl/rsc"
 readme = "README.md"
 keywords = ["scientific", "calculator", "parser", "expression"]
@@ -12,9 +12,6 @@ license = "MIT"
 
 [lib]
 path = "src/lib.rs"
-
-[dev-dependencies]
-criterion = "0.2"
 
 [dependencies]
 # dependencies for the binary version
@@ -28,7 +25,3 @@ build-binary = ["structopt", "colored"]
 name = "rsc"
 path = "src/bin/main.rs"
 required-features = ["build-binary"]
-
-[[bench]]
-name = "rsc_benchmark"
-harness = false

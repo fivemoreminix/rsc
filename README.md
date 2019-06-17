@@ -1,5 +1,7 @@
 ![](https://img.shields.io/crates/l/rsc.svg) ![](https://img.shields.io/badge/status-stable-blue.svg)
 
+[Changelog](CHANGELOG.md)
+
 **RSC is a handwritten scientific calculator for turning an equation inside a string into a result.** RSC is designed to be very lightweight and have as few dependencies as possible. It has the goal of just doing a single thing really well, and enabling anyone to extend it with more features.
 
 RSC is also designed with the goal to not become bloated software. **RSC will not receive frequent updates, but that does not mean it is old or unmaintained.** That being said, RSC may still receive internal updates with relation to speed or resource usage.
@@ -70,12 +72,14 @@ In order to keep variables, you must create a `Computer` instance:
 use rsc::computer::Computer;
 
 fn main() {
-    let mut c = Computer::new();
+    let mut c = Computer::<f64>::default();
 
     assert!(c.eval("x = 5").unwrap() == 5.0);
     assert!(c.eval("x^2").unwrap() == 25.0);
 }
 ```
+
+Much more information can be found in [the documentation](https://docs.rs/rsc/).
 ## Debug
 RSC can be run with the `ast` flag and show the internal expression that was created by the parser. This is most commonly used for entertainment purposes 😛.
 ```rust
@@ -93,22 +97,6 @@ Pow(
     )
 )
 8
-```
-## Errors
-```rust
-PS C:\Users\lukew> rsc
->oops
-Lexer error: InvalidIdentifier("oops")
->3.3.1
-Lexer error: InvalidNumber("3.3.1")
->2+
-Parser error: ExpectedFactor(None)
->2(3
-Parser error: ExpectedClosingParenthesis
->2b
-Parser error: UnexpectedNumber(Identifier("b"))
->b
-Compute error: UnrecognizedIdentifier("b")
 ```
 # Related Projects
 * [rscplot](https://github.com/asmoaesl/rscplot): A graphing calculator dependent on RSC for solving expressions.
