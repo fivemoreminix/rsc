@@ -33,7 +33,7 @@ fn main() {
 ```
 ### Executable
 Using RSC as the actual program provides a simple interface for solving expressions. A right arrow shows where the user can input an expression, and upon pressing the Return key, the result of the entered expression is displayed on the next line.
-```
+```rust
 PS C:\Users\Luke> rsc
 >2+2
 4
