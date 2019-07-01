@@ -56,7 +56,7 @@ fn main() {
             continue;
         }
 
-        match tokenize::<f64>(&buffer, true) {
+        match tokenize::<f64>(&buffer) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => {
                     if opt.ast {
