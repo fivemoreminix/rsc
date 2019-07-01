@@ -94,10 +94,10 @@ impl Num for f64 {
 /// An error that groups together all three error types: [computer::ComputeError](computer/enum.ComputeError.html),
 /// [parser::ParserError](parser/enum.ParserError.html), and [lexer::LexerError](lexer/enum.LexerError.html). Produced when using `eval` helper functions.
 #[derive(Debug, Clone)]
-pub enum EvalError<T: Clone + std::fmt::Debug> {
-    ComputeError(computer::ComputeError),
-    ParserError(parser::ParserError<T>),
-    LexerError(lexer::LexerError),
+pub enum EvalError<'a, T: Clone + std::fmt::Debug> {
+    ComputeError(computer::ComputeError<'a>),
+    ParserError(parser::ParserError<'a, T>),
+    LexerError(lexer::LexerError<'a>),
 }
 
 /// Turn an expression inside a string into a number.
@@ -117,7 +117,7 @@ pub enum EvalError<T: Clone + std::fmt::Debug> {
 /// use rsc::eval;
 /// assert!(eval("3.1 + 2.2").unwrap() == 5.3);
 /// ```
-pub fn eval<T: std::fmt::Debug>(input: &str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
+pub fn eval<'a, T: std::fmt::Debug>(input: &'a str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
     match lexer::tokenize(input, false) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new().compute(&ast) {

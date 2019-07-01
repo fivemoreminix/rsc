@@ -42,11 +42,11 @@ pub trait Num {
 /// | UnrecognizedIdentifier | When an identifier could not be resolved: it was not found in the Computer's variables. |
 /// | UnrecognizedFunctionIdentifier | When the identifier could not be found in the Computer's functions.             |
 #[derive(Debug, Clone, PartialEq)]
-pub enum ComputeError {
+pub enum ComputeError<'a> {
     InvalidFactorial,
-    VariableIsConstant(String),
-    UnrecognizedIdentifier(String),
-    UnrecognizedFunctionIdentifier(String),
+    VariableIsConstant(&'a str),
+    UnrecognizedIdentifier(&'a str),
+    UnrecognizedFunctionIdentifier(&'a str),
 }
 use self::ComputeError::*;
 
@@ -65,12 +65,12 @@ use self::ComputeError::*;
 /// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
 /// ```
 #[derive(Clone)]
-pub struct Computer<'a, T> {
+pub struct Computer<'fun, T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
-    pub functions: HashMap<String, &'a Fn(T) -> T>,
+    pub functions: HashMap<String, &'fun Fn(T) -> T>,
 }
 
-impl<'a> std::default::Default for Computer<'a, f64> {
+impl<'fun> std::default::Default for Computer<'fun, f64> {
     fn default() -> Self {
         Self {
             variables: {
@@ -80,7 +80,7 @@ impl<'a> std::default::Default for Computer<'a, f64> {
                 map
             },
             functions: {
-                let mut map = HashMap::<String, &'a Fn(f64) -> f64>::new();
+                let mut map = HashMap::<String, &'fun Fn(f64) -> f64>::new();
                 map.insert("sqrt".to_owned(), &|n| n.sqrt());
                 map.insert("sin".to_owned(), &|n| n.sin());
                 map.insert("cos".to_owned(), &|n| n.cos());
@@ -92,9 +92,9 @@ impl<'a> std::default::Default for Computer<'a, f64> {
     }
 }
 
-impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<'a, T> {
+impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>> Computer<'fun, T> {
     /// Create an empty, unconfigured Computer.
-    pub fn new() -> Computer<'a, T> {
+    pub fn new() -> Computer<'fun, T> {
         Computer {
             variables: HashMap::new(),
             functions: HashMap::new(),
@@ -103,7 +103,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
 
     /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
     /// in a single helper function.
-    pub fn eval(&mut self, expr: &str) -> Result<T, EvalError<T>> where T: std::fmt::Debug + std::str::FromStr {
+    pub fn eval<'a>(&mut self, expr: &'a str) -> Result<T, EvalError<'a, T>> where T: std::fmt::Debug + std::str::FromStr {
         match tokenize(expr, false) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => match self.compute(&ast) {
@@ -116,12 +116,12 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
         }
     }
 
-    fn compute_expr(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
+    fn compute_expr<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError<'a>> { // TODO: a lot of .to_owned() happens here to compare &'a str to Strings: there must be a more efficient way
         match expr {
             Expr::Constant(num) => Ok(num.clone()),
-            Expr::Identifier(id) => match self.variables.get(id) {
+            Expr::Identifier(id) => match self.variables.get(id.to_owned()) {
                 Some(value) => Ok(value.0.clone()),
-                None => Err(UnrecognizedIdentifier(id.clone())),
+                None => Err(UnrecognizedIdentifier(id)),
             },
             Expr::Neg(expr) => Ok(-self.compute_expr(expr)?),
             Expr::BinOp(op, lexpr, rexpr) => {
@@ -139,17 +139,17 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
             Expr::Abs(expr) => Ok(self.compute_expr(expr)?.abs()),
             Expr::Function(id, expr) => {
                 let value = self.compute_expr(&expr)?;
-                match self.functions.get(id) {
+                match self.functions.get(id.to_owned()) {
                     Some(func) => Ok(func(value)),
-                    None => Err(UnrecognizedFunctionIdentifier(id.clone())),
+                    None => Err(UnrecognizedFunctionIdentifier(id)),
                 }
             }
             Expr::Assignment(id, expr) => {
                 let value = self.compute_expr(&expr)?;
-                if self.variables.contains_key(id) && self.variables.get(id).unwrap().1 == true {
-                    return Err(VariableIsConstant(id.clone()));
+                if self.variables.contains_key(id.to_owned()) && self.variables.get(id.to_owned()).unwrap().1 == true {
+                    return Err(VariableIsConstant(id));
                 }
-                self.variables.insert(id.clone(), (value.clone(), false));
+                self.variables.insert((*id).to_owned(), (value.clone(), false));
                 Ok(value)
             }
             Expr::Pow(lexpr, rexpr) => {
@@ -180,7 +180,7 @@ impl<'a, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<O
     /// // Using this function to create the result from the `Expr`.
     /// let result = computer.compute(&ast).unwrap();
     /// ```
-    pub fn compute(&mut self, expr: &Expr<T>) -> Result<T, ComputeError> {
+    pub fn compute<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError<'a>> {
         let val = self.compute_expr(expr);
         match &val {
             Ok(n) => {

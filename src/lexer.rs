@@ -17,10 +17,10 @@ pub enum Operator {
 use self::Operator::*;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token<T> {
+pub enum Token<'a, T> {
     Number(T),
     Operator(Operator),
-    Identifier(String),
+    Identifier(&'a str),
 }
 
 /// # Error Lookup Table
@@ -29,9 +29,9 @@ pub enum Token<T> {
 /// | InvalidCharacter | If the input contains any characters not recognized by the lexer to be numbers or characters, ex: 'ƒ' |
 /// | InvalidNumber    | A number entered invalidly: '2.34.2' or '..3'                                                         |
 #[derive(Debug, Clone, PartialEq)]
-pub enum LexerError {
+pub enum LexerError<'a> {
     InvalidCharacter(char),
-    InvalidNumber(String),
+    InvalidNumber(&'a str),
 }
 
 /// Turn a string into a vector of tokens. This function generally takes the most time,
@@ -42,15 +42,15 @@ pub enum LexerError {
 /// let tokens = tokenize("2 + 2").unwrap();
 /// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
 /// ```
-pub fn tokenize<T>(input: &str, case_sensitive: bool) -> Result<Vec<Token<T>>, LexerError>
+pub fn tokenize<'a, T>(src: &'a str, case_sensitive: bool) -> Result<Vec<Token<'a, T>>, LexerError>
 where
     T: std::str::FromStr,
 {
     let mut tokens = Vec::<Token<T>>::new();
 
-    let mut chars = input.chars().peekable();
+    let mut chars = src.chars().enumerate().peekable();
 
-    while let Some(c) = chars.next() {
+    while let Some((i, c)) = chars.next() {
         match c {
             '+' => tokens.push(Token::Operator(Plus)),
             '-' => tokens.push(Token::Operator(Minus)),
@@ -63,36 +63,40 @@ where
             '|' => tokens.push(Token::Operator(Pipe)),
             '=' => tokens.push(Token::Operator(Equals)),
             '!' => tokens.push(Token::Operator(Factorial)),
-            c => {
+            _ => {
                 if c.is_whitespace() {
                     continue;
                 } else if c.is_digit(10) || c == '.' {
-                    let mut number_string = c.to_string(); // Like creating a new string and pushing the character.
+                    let start_idx = i;
+                    let mut end_idx = i;
 
-                    while let Some(&c) = chars.peek() {
-                        if c.is_digit(10) || c == '.' {
-                            number_string.push(chars.next().unwrap());
+                    while let Some((i, c)) = chars.peek() {
+                        if c.is_digit(10) || c == &'.' {
+                            chars.next(); // consume the character
+                            end_idx += 1;
                         } else {
                             break;
                         }
                     }
 
-                    match number_string.parse::<T>() {
+                    match (&src[start_idx..=end_idx]).parse::<T>() {
                         Ok(num) => tokens.push(Token::Number(num)),
-                        _ => return Err(LexerError::InvalidNumber(number_string)),
+                        _ => return Err(LexerError::InvalidNumber(&src[start_idx..=end_idx])),
                     }
                 } else if c.is_alphabetic() {
-                    let mut full_identifier = c.to_string();
+                	let start_idx = i;
+                    let mut end_idx = i;
 
-                    while let Some(&c) = chars.peek() {
-                        if c.is_alphabetic() || c == '_' {
-                            full_identifier.push(chars.next().unwrap());
+                    while let Some((i, c)) = chars.peek() {
+                        if c.is_alphabetic() || c == &'_' {
+                            chars.next();
+                            end_idx += 1;
                         } else {
                             break;
                         }
                     }
 
-                    tokens.push(Token::Identifier((if case_sensitive { full_identifier } else { full_identifier.to_lowercase() }).to_owned()));
+                    tokens.push(Token::Identifier(/*if case_sensitive { */&src[start_idx..=end_idx]/* } else { full_identifier.to_lowercase() }*/));
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }
@@ -100,6 +104,5 @@ where
         }
     }
 
-    tokens.shrink_to_fit();
     Ok(tokens)
 }
