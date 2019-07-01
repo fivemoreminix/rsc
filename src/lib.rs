@@ -118,7 +118,7 @@ pub enum EvalError<'a, T: Clone + std::fmt::Debug> {
 /// assert!(eval("3.1 + 2.2").unwrap() == 5.3);
 /// ```
 pub fn eval<'a, T: std::fmt::Debug>(input: &'a str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
-    match lexer::tokenize(input, false) {
+    match lexer::tokenize(input) {
         Ok(tokens) => match parser::parse(&tokens) {
             Ok(ast) => match computer::Computer::new().compute(&ast) {
                 Ok(num) => Ok(num),

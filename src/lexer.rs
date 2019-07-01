@@ -42,7 +42,7 @@ pub enum LexerError<'a> {
 /// let tokens = tokenize("2 + 2").unwrap();
 /// assert_eq!(tokens.as_slice(), &[Token::Number(2.0), Token::Operator(Operator::Plus), Token::Number(2.0)]);
 /// ```
-pub fn tokenize<'a, T>(src: &'a str, case_sensitive: bool) -> Result<Vec<Token<'a, T>>, LexerError>
+pub fn tokenize<'a, T>(src: &'a str) -> Result<Vec<Token<'a, T>>, LexerError>
 where
     T: std::str::FromStr,
 {
@@ -70,7 +70,7 @@ where
                     let start_idx = i;
                     let mut end_idx = i;
 
-                    while let Some((i, c)) = chars.peek() {
+                    while let Some((_, c)) = chars.peek() {
                         if c.is_digit(10) || c == &'.' {
                             chars.next(); // consume the character
                             end_idx += 1;
@@ -87,7 +87,7 @@ where
                 	let start_idx = i;
                     let mut end_idx = i;
 
-                    while let Some((i, c)) = chars.peek() {
+                    while let Some((_, c)) = chars.peek() {
                         if c.is_alphabetic() || c == &'_' {
                             chars.next();
                             end_idx += 1;
@@ -96,7 +96,7 @@ where
                         }
                     }
 
-                    tokens.push(Token::Identifier(/*if case_sensitive { */&src[start_idx..=end_idx]/* } else { full_identifier.to_lowercase() }*/));
+                    tokens.push(Token::Identifier(&src[start_idx..=end_idx]));
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }

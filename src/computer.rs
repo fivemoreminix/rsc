@@ -104,7 +104,7 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
     /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
     /// in a single helper function.
     pub fn eval<'a>(&mut self, expr: &'a str) -> Result<T, EvalError<'a, T>> where T: std::fmt::Debug + std::str::FromStr {
-        match tokenize(expr, false) {
+        match tokenize(expr) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => match self.compute(&ast) {
                     Ok(num) => Ok(num),
