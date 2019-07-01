@@ -67,7 +67,7 @@ use self::ComputeError::*;
 #[derive(Clone)]
 pub struct Computer<'fun, T> {
     pub variables: HashMap<String, (T, bool)>, // (T, is_constant?)
-    pub functions: HashMap<String, &'fun Fn(T) -> T>,
+    pub functions: HashMap<String, &'fun dyn Fn(T) -> T>,
 }
 
 impl<'fun> std::default::Default for Computer<'fun, f64> {
@@ -80,7 +80,7 @@ impl<'fun> std::default::Default for Computer<'fun, f64> {
                 map
             },
             functions: {
-                let mut map = HashMap::<String, &'fun Fn(f64) -> f64>::new();
+                let mut map = HashMap::<String, &'fun dyn Fn(f64) -> f64>::new();
                 map.insert("sqrt".to_owned(), &|n| n.sqrt());
                 map.insert("sin".to_owned(), &|n| n.sin());
                 map.insert("cos".to_owned(), &|n| n.cos());
