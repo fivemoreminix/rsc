@@ -95,9 +95,9 @@ impl Num for f64 {
 /// [parser::ParserError](parser/enum.ParserError.html), and [lexer::LexerError](lexer/enum.LexerError.html). Produced when using `eval` helper functions.
 #[derive(Debug, Clone)]
 pub enum EvalError<'a, T: Clone + std::fmt::Debug> {
-    ComputeError(computer::ComputeError<'a>),
+    ComputeError(computer::ComputeError),
     ParserError(parser::ParserError<'a, T>),
-    LexerError(lexer::LexerError<'a>),
+    LexerError(lexer::LexerError),
 }
 
 /// Turn an expression inside a string into a number.

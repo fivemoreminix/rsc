@@ -42,11 +42,11 @@ pub trait Num {
 /// | UnrecognizedIdentifier | When an identifier could not be resolved: it was not found in the Computer's variables. |
 /// | UnrecognizedFunctionIdentifier | When the identifier could not be found in the Computer's functions.             |
 #[derive(Debug, Clone, PartialEq)]
-pub enum ComputeError<'a> {
+pub enum ComputeError {
     InvalidFactorial,
-    VariableIsConstant(&'a str),
-    UnrecognizedIdentifier(&'a str),
-    UnrecognizedFunctionIdentifier(&'a str),
+    VariableIsConstant(String),
+    UnrecognizedIdentifier(String),
+    UnrecognizedFunctionIdentifier(String),
 }
 use self::ComputeError::*;
 
@@ -116,12 +116,12 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
         }
     }
 
-    fn compute_expr<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError<'a>> { // TODO: a lot of .to_owned() happens here to compare &'a str to Strings: there must be a more efficient way
+    fn compute_expr<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError> { // TODO: a lot of .to_owned() happens here to compare &'a str to Strings: there must be a more efficient way
         match expr {
             Expr::Constant(num) => Ok(num.clone()),
             Expr::Identifier(id) => match self.variables.get(id.to_owned()) {
                 Some(value) => Ok(value.0.clone()),
-                None => Err(UnrecognizedIdentifier(id)),
+                None => Err(UnrecognizedIdentifier(id.to_string())),
             },
             Expr::Neg(expr) => Ok(-self.compute_expr(expr)?),
             Expr::BinOp(op, lexpr, rexpr) => {
@@ -141,13 +141,13 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
                 let value = self.compute_expr(&expr)?;
                 match self.functions.get(id.to_owned()) {
                     Some(func) => Ok(func(value)),
-                    None => Err(UnrecognizedFunctionIdentifier(id)),
+                    None => Err(UnrecognizedFunctionIdentifier(id.to_string())),
                 }
             }
             Expr::Assignment(id, expr) => {
                 let value = self.compute_expr(&expr)?;
                 if self.variables.contains_key(id.to_owned()) && self.variables.get(id.to_owned()).unwrap().1 == true {
-                    return Err(VariableIsConstant(id));
+                    return Err(VariableIsConstant(id.to_string()));
                 }
                 self.variables.insert((*id).to_owned(), (value.clone(), false));
                 Ok(value)
@@ -180,7 +180,7 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
     /// // Using this function to create the result from the `Expr`.
     /// let result = computer.compute(&ast).unwrap();
     /// ```
-    pub fn compute<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError<'a>> {
+    pub fn compute<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError> {
         let val = self.compute_expr(expr);
         match &val {
             Ok(n) => {

@@ -29,9 +29,9 @@ pub enum Token<'a, T> {
 /// | InvalidCharacter | If the input contains any characters not recognized by the lexer to be numbers or characters, ex: 'ƒ' |
 /// | InvalidNumber    | A number entered invalidly: '2.34.2' or '..3'                                                         |
 #[derive(Debug, Clone, PartialEq)]
-pub enum LexerError<'a> {
+pub enum LexerError {
     InvalidCharacter(char),
-    InvalidNumber(&'a str),
+    InvalidNumber(String),
 }
 
 /// Turn a string into a vector of tokens. This function generally takes the most time,
@@ -81,7 +81,7 @@ where
 
                     match (&src[start_idx..=end_idx]).parse::<T>() {
                         Ok(num) => tokens.push(Token::Number(num)),
-                        _ => return Err(LexerError::InvalidNumber(&src[start_idx..=end_idx])),
+                        _ => return Err(LexerError::InvalidNumber(src[start_idx..=end_idx].to_owned())),
                     }
                 } else if c.is_alphabetic() {
                 	let start_idx = i;
