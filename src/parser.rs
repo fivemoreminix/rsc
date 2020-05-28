@@ -12,6 +12,12 @@ use crate::lexer::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr<'a, T: Clone> {
+    // Booleans and comparisons
+    BoolOp(Keyword, Box<Expr<'a, T>>, Box<Expr<'a, T>>),
+    Bool(bool),
+    BoolNot(Box<Expr<'a, T>>),
+    BinCmp(Operator, Box<Expr<'a, T>>, Box<Expr<'a, T>>),
+
     BinOp(Operator, Box<Expr<'a, T>>, Box<Expr<'a, T>>),
     Pow(Box<Expr<'a, T>>, Box<Expr<'a, T>>),
     Neg(Box<Expr<'a, T>>),
@@ -129,7 +135,7 @@ pub fn parse<'a, T: Clone + Debug>(tokens: &[Token<'a, T>]) -> ParserResult<'a, 
     match preprocess(tokens) {
         Some(e) => Err(e),
         None => {
-            let expr = parse_additive_expr(&mut t);
+            let expr = parse_bool_and(&mut t);
             if expr.is_ok() {
                 // Are there any remaining tokens? That's an unexpected token error...
                 if let Some(_) = t.peek() {
@@ -155,7 +161,73 @@ pub fn parse<'a, T: Clone + Debug>(tokens: &[Token<'a, T>]) -> ParserResult<'a, 
 /// If you are not sure, use default `parse` instead.
 #[allow(dead_code)]
 pub fn parse_no_preprocess<'a, T: Clone + Debug>(tokens: &[Token<'a, T>]) -> ParserResult<'a, T> {
-    parse_additive_expr(&mut tokens.iter().peekable())
+    parse_bool_and(&mut tokens.iter().peekable())
+}
+
+fn parse_bool_and<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
+    let mut expr = parse_bool_or(tokens)?;
+    loop {
+        match tokens.peek() {
+            Some(Token::Keyword(kwd)) if kwd == &Keyword::And => {
+                tokens.next();
+                let r_expr = parse_bool_or(tokens)?;
+                expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+            }
+            _ => break,
+        }
+    }
+    Ok(expr)
+}
+
+fn parse_bool_or<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
+    let mut expr = parse_bool(tokens)?;
+    loop {
+        match tokens.peek() {
+            Some(Token::Keyword(kwd)) if kwd == &Keyword::Or => {
+                tokens.next();
+                let r_expr = parse_bool(tokens)?;
+                expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+            }
+            _ => break,
+        }
+    }
+    Ok(expr)
+}
+
+fn parse_bool<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
+    match tokens.peek() {
+        Some(Token::Keyword(Keyword::True)) => {
+            tokens.next();
+            Ok(Expr::Bool(true))
+        }
+        Some(Token::Keyword(Keyword::False)) => {
+            tokens.next();
+            Ok(Expr::Bool(false))
+        }
+        Some(Token::Operator(Operator::Exclamation)) => {
+            tokens.next(); // Consume !
+            Ok(Expr::BoolNot(Box::new(parse_bool(tokens)?)))
+        }
+        _ => parse_comparison(tokens),
+    }
+}
+
+fn parse_comparison<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
+    dbg!("comparison");
+    let mut expr = parse_additive_expr(tokens)?;
+    loop {
+        match tokens.peek() {
+            Some(Token::Operator(op)) if op == &Operator::Equals || op == &Operator::Greater
+                || op == &Operator::GreaterEqual || op == &Operator::Lesser || op == &Operator::LesserEqual
+                || op == &Operator::NotEquals => {
+                tokens.next();
+                let r_expr = parse_additive_expr(tokens)?;
+                expr = Expr::BinCmp(*op, Box::new(expr), Box::new(r_expr));
+            }
+            _ => break,
+        }
+    }
+    Ok(expr)
 }
 
 /// Additive expressions are things like `expr + expr`, or `expr - expr`. It reads a multiplicative
@@ -243,7 +315,7 @@ fn parse_power_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T
 fn parse_factorial_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
     let expr = parse_factor(tokens)?;
     match tokens.peek() {
-        Some(Token::Operator(Operator::Factorial)) => {
+        Some(Token::Operator(Operator::Exclamation)) => {
             tokens.next();
             Ok(Expr::Factorial(Box::new(expr)))
         }
@@ -255,6 +327,7 @@ fn parse_factorial_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'
 /// like numbers or expressions in parenthesis. The factor makes the recursion in `Expr`
 /// finite.
 fn parse_factor<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
+    dbg!("factor");
     match tokens.next() {
         // Parenthetical expressions such as `(expr)`.
         Some(Token::Operator(Operator::LParen)) => {

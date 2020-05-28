@@ -1,3 +1,12 @@
+(* precedence climbing boolean parsing *)
+bool_and = bool_or, { "and", bool_or } ;
+bool_or  = bool, { "or", bool } ;
+bool = "true" | "false"
+     | "!", bool
+     | comparison ;
+comparison = additive_expr, { "=" | ">" | ">=" | "<" | "<=" | "!=" , additive_expr } ;
+
+(* precedence climbing parsing *)
 additive_expr = multiplicative_expr, { ("+" | "-"), multiplicative_expr } ;
 multiplicative_expr = parenthetical_multiplicative_expr, { ("*" | "/"), parenthetical_multiplicative_expr } ;
 parenthetical_multiplicative_expr = power_expr, { "(", additive_expr, ")", { "^", factorial_expr } } ;

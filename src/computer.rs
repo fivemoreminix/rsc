@@ -118,6 +118,27 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
 
     fn compute_expr<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError> { // TODO: a lot of .to_owned() happens here to compare &'a str to Strings: there must be a more efficient way
         match expr {
+            // Boolean
+            Expr::BoolOp(kwd, lexpr, rexpr) => unimplemented!(),
+            Expr::Bool(b) => unimplemented!(),
+            Expr::BoolNot(expr) => unimplemented!(),
+            Expr::BinCmp(op, lexpr, rexpr) => {
+                let lval = self.compute_expr(&lexpr)?;
+                let rval = self.compute_expr(&rexpr)?;
+                
+                match op {
+                    Operator::Equals => unimplemented!(),
+                    Operator::Greater => unimplemented!(),
+                    Operator::GreaterEqual => unimplemented!(),
+                    Operator::Lesser => unimplemented!(),
+                    Operator::LesserEqual => unimplemented!(),
+                    Operator::NotEquals => unimplemented!(),
+                    
+                    _ => unimplemented!(),
+                }
+            }
+
+            // Numerical
             Expr::Constant(num) => Ok(num.clone()),
             Expr::Identifier(id) => match self.variables.get(id.to_owned()) {
                 Some(value) => Ok(value.0.clone()),
@@ -133,6 +154,7 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
                     Operator::Minus => Ok(lnum - rnum),
                     Operator::Star => Ok(lnum * rnum),
                     Operator::Slash => Ok(lnum / rnum),
+
                     _ => unimplemented!(),
                 }
             }

@@ -2,6 +2,7 @@
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Operator {
+    // Numerical
     Plus,
     Minus,
     Star,
@@ -11,15 +12,33 @@ pub enum Operator {
     LParen,
     RParen,
     Pipe,
-    Equals,
-    Factorial,
+    Equals, // Comparison Equal or assignment
+    Exclamation, // Boolean NOT or factorial
+
+    // Comparison
+    Greater,
+    GreaterEqual,
+    Lesser,
+    LesserEqual,
+    NotEquals,
 }
 use self::Operator::*;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Keyword {
+    // Boolean
+    True,
+    False,
+    And,
+    Or
+}
+use self::Keyword::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token<'a, T> {
     Number(T),
     Operator(Operator),
+    Keyword(Keyword),
     Identifier(&'a str),
 }
 
@@ -62,7 +81,33 @@ where
             ')' => tokens.push(Token::Operator(RParen)),
             '|' => tokens.push(Token::Operator(Pipe)),
             '=' => tokens.push(Token::Operator(Equals)),
-            '!' => tokens.push(Token::Operator(Factorial)),
+            '!' => {
+                match chars.peek() {
+                    Some((_, '=')) => {
+                        chars.next(); // Consume =
+                        tokens.push(Token::Operator(NotEquals));
+                    }
+                    _ => tokens.push(Token::Operator(Exclamation)),
+                }
+            }
+            '>' => {
+                match chars.peek() {
+                    Some((_, '=')) => {
+                        chars.next(); // Consume =
+                        tokens.push(Token::Operator(GreaterEqual));
+                    }
+                    _ => tokens.push(Token::Operator(Greater)),
+                }
+            }
+            '<' => {
+                match chars.peek() {
+                    Some((_, '=')) => {
+                        chars.next(); // Consume =
+                        tokens.push(Token::Operator(LesserEqual));
+                    }
+                    _ => tokens.push(Token::Operator(Lesser)),
+                }
+            }
             _ => {
                 if c.is_whitespace() {
                     continue;
@@ -96,7 +141,13 @@ where
                         }
                     }
 
-                    tokens.push(Token::Identifier(&src[start_idx..=end_idx]));
+                    match &src[start_idx..=end_idx] {
+                        "true" => tokens.push(Token::Keyword(True)),
+                        "false" => tokens.push(Token::Keyword(False)),
+                        "and" => tokens.push(Token::Keyword(And)),
+                        "or" => tokens.push(Token::Keyword(Or)),
+                        id => tokens.push(Token::Identifier(id)),
+                    }
                 } else {
                     return Err(LexerError::InvalidCharacter(c));
                 }
