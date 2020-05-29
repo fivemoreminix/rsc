@@ -1,6 +1,6 @@
 [package]
 name = "rsc"
-version = "2.0.0"
+version = "3.0.0"
 edition = "2018"
 authors = ["Luke I. Wilson"]
 description = "A zero-dependency calculator for solving scientific math equations in strings."
@@ -14,14 +14,15 @@ license = "MIT"
 path = "src/lib.rs"
 
 [dependencies]
+num = "0.2.1"
 # dependencies for the binary version
 structopt = { version = "0.2", optional = true }
 colored = { version = "1.7", optional = true }
 
 [features]
-build-binary = ["structopt", "colored"]
+exec = ["structopt", "colored"]
 
 [[bin]]
 name = "rsc"
 path = "src/bin/main.rs"
-required-features = ["build-binary"]
+required-features = ["exec"]
