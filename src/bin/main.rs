@@ -64,7 +64,8 @@ fn main() {
             continue;
         }
 
-        match tokenize::<BigRational>(&buffer) {
+        let mut lexer = Lexer::<BigRational>::new(buffer);
+        match lexer.scan() {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => {
                     if opt.ast {

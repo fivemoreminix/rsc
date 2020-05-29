@@ -102,20 +102,23 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
         }
     }
 
-    /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
-    /// in a single helper function.
-    pub fn eval<'a>(&mut self, expr: &'a str) -> Result<T, EvalError<'a, T>> where T: std::fmt::Debug + std::str::FromStr {
-        match tokenize(expr) {
-            Ok(tokens) => match parse(&tokens) {
-                Ok(ast) => match self.compute(&ast) {
-                    Ok(num) => Ok(num),
-                    Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
-                },
-                Err(parser_err) => Err(EvalError::ParserError(parser_err)),
-            },
-            Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
-        }
-    }
+    // /// Lexically analyze, parse, and compute the given equation in string form. This does every step for you,
+    // /// in a single helper function.
+    // pub fn eval<'a>(&mut self, expr: &'a str) -> Result<T, EvalError<'a, T>>
+    //     where T: 'a + std::fmt::Debug + std::str::FromStr
+    // {
+    //     let mut lexer = Lexer::new(expr);
+    //     match lexer.scan() {
+    //         Ok(tokens) => match parse(&tokens) {
+    //             Ok(ast) => match self.compute(&ast) {
+    //                 Ok(num) => Ok(num),
+    //                 Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
+    //             },
+    //             Err(parser_err) => Err(EvalError::ParserError(parser_err)),
+    //         },
+    //         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
+    //     }
+    // }
 
     fn compute_expr<'a>(&mut self, expr: &Expr<'a, T>) -> Result<T, ComputeError> { // TODO: a lot of .to_owned() happens here to compare &'a str to Strings: there must be a more efficient way
         match expr {
@@ -128,12 +131,12 @@ impl<'fun, T: Num + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub
                 let rval = self.compute_expr(&rexpr)?;
                 
                 match op {
-                    Operator::Equals => unimplemented!(),
+                    Operator::Equal => unimplemented!(),
                     Operator::Greater => unimplemented!(),
                     Operator::GreaterEqual => unimplemented!(),
                     Operator::Lesser => unimplemented!(),
                     Operator::LesserEqual => unimplemented!(),
-                    Operator::NotEquals => unimplemented!(),
+                    Operator::NotEqual => unimplemented!(),
                     
                     _ => unimplemented!(),
                 }

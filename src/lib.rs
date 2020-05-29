@@ -70,7 +70,7 @@ pub mod computer;
 pub mod lexer;
 pub mod parser;
 
-use num::{traits::Signed, BigInt, BigRational, Rational};
+use num::{traits::Signed, BigInt, BigRational};
 
 use crate::computer::Num;
 use std::ops::*;
@@ -129,35 +129,38 @@ impl Num for BigRational {
 pub enum EvalError<'a, T: Clone + std::fmt::Debug> {
     ComputeError(computer::ComputeError),
     ParserError(parser::ParserError<'a, T>),
-    LexerError(lexer::LexerError),
+    LexerError(lexer::LexerError<'a>),
 }
 
-/// Turn an expression inside a string into a number.
-/// If you are looking for more control, you may want to use
-/// the [lexer](lexer/index.html), [parser](parser/index.html), and [computer](computer/index.html) modules individually.
-/// 
-/// This creates the computer using `Computer::new()`. If you are looking
-/// to do simple `eval` on a preconfigured Computer, please call [`eval`
-/// on the computer](computer/struct.Computer.html#method.eval). For example:
-/// ```
-/// let mut computer = Computer::<f64>::default();
-/// assert!(computer.eval("3.1 + 2.2").unwrap() == 5.3);
-/// ```
-/// 
-/// # Example
-/// ```
-/// use rsc::eval;
-/// assert!(eval("3.1 + 2.2").unwrap() == 5.3);
-/// ```
-pub fn eval<'a, T: std::fmt::Debug>(input: &'a str) -> Result<T, EvalError<T>> where T: Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>{
-    match lexer::tokenize(input) {
-        Ok(tokens) => match parser::parse(&tokens) {
-            Ok(ast) => match computer::Computer::new().compute(&ast) {
-                Ok(num) => Ok(num),
-                Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
-            },
-            Err(parser_err) => Err(EvalError::ParserError(parser_err)),
-        },
-        Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
-    }
-}
+// / Turn an expression inside a string into a number.
+// / If you are looking for more control, you may want to use
+// / the [lexer](lexer/index.html), [parser](parser/index.html), and [computer](computer/index.html) modules individually.
+// / 
+// / This creates the computer using `Computer::new()`. If you are looking
+// / to do simple `eval` on a preconfigured Computer, please call [`eval`
+// / on the computer](computer/struct.Computer.html#method.eval). For example:
+// / ```
+// / let mut computer = Computer::<f64>::default();
+// / assert!(computer.eval("3.1 + 2.2").unwrap() == 5.3);
+// / ```
+// / 
+// / # Example
+// / ```
+// / use rsc::eval;
+// / assert!(eval("3.1 + 2.2").unwrap() == 5.3);
+// / ```
+// pub fn eval<'a, T: std::fmt::Debug>(input: &'a str) -> Result<T, EvalError<'_, T>>
+//     where T: 'a + Num + std::str::FromStr + Clone + PartialOrd + Neg<Output = T> + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>
+// {
+//     let mut lexer = lexer::Lexer::new(input.to_owned());
+//     match lexer.scan() {
+//         Ok(tokens) => match parser::parse(&tokens) {
+//             Ok(ast) => match computer::Computer::new().compute(&ast) {
+//                 Ok(num) => Ok(num),
+//                 Err(compute_err) => Err(EvalError::ComputeError(compute_err)),
+//             },
+//             Err(parser_err) => Err(EvalError::ParserError(parser_err)),
+//         },
+//         Err(lexer_err) => Err(EvalError::LexerError(lexer_err)),
+//     }
+// }

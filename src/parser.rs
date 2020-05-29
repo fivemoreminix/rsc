@@ -91,7 +91,7 @@ impl<'a, T: Clone> Expr<'a, T> {
 /// | ExpectedFactor             | Expected to find a definite value like a variable or number, but did not.    |
 /// | UnexpectedNumber           | A number was found in place of some other vital structure, ex: '24 3'        |
 /// | UnexpectedToken            | A token has found to be remaining even after analysis: we don't know what to do with it.|
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum ParserError<'a, T: Clone + Debug> {
     ExpectedClosingParenthesis,
     ExpectedClosingPipe,
@@ -112,11 +112,11 @@ pub fn preprocess<'a, T: Clone + Debug>(tokens: &[Token<'a, T>]) -> Option<Parse
     // Preprocess and preemptive erroring on inputs like "2x"
     let mut t = tokens.iter().peekable();
     while let Some(tok) = t.next() {
-        match tok {
-            Token::Number(_) => {
+        match tok.value() {
+            TokenValue::Number(_) => {
                 if let Some(peek_tok) = t.peek() {
-                    match peek_tok {
-                        Token::Identifier(_) => {
+                    match peek_tok.value() {
+                        TokenValue::Identifier(_) => {
                             return Some(UnexpectedNumber((*peek_tok).clone()));
                         }
                         _ => {}
@@ -168,10 +168,13 @@ fn parse_bool_and<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>
     let mut expr = parse_bool_or(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Keyword(kwd)) if kwd == &Keyword::And => {
-                tokens.next();
-                let r_expr = parse_bool_or(tokens)?;
-                expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+            Some(tok) => match tok.value() {
+                TokenValue::Keyword(kwd) if kwd == &Keyword::And => {
+                    tokens.next();
+                    let r_expr = parse_bool_or(tokens)?;
+                    expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+                }
+                _ => break,
             }
             _ => break,
         }
@@ -183,10 +186,13 @@ fn parse_bool_or<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>
     let mut expr = parse_bool(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Keyword(kwd)) if kwd == &Keyword::Or => {
-                tokens.next();
-                let r_expr = parse_bool(tokens)?;
-                expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+            Some(tok) => match tok.value() {
+                TokenValue::Keyword(kwd) if kwd == &Keyword::Or => {
+                    tokens.next();
+                    let r_expr = parse_bool(tokens)?;
+                    expr = Expr::BoolOp(*kwd, Box::new(expr), Box::new(r_expr));
+                }
+                _ => break,
             }
             _ => break,
         }
@@ -196,15 +202,15 @@ fn parse_bool_or<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>
 
 fn parse_bool<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
     match tokens.peek() {
-        Some(Token::Keyword(Keyword::True)) => {
+        Some(Token { value: TokenValue::Keyword(Keyword::True), .. }) => {
             tokens.next();
             Ok(Expr::Bool(true))
         }
-        Some(Token::Keyword(Keyword::False)) => {
+        Some(Token { value: TokenValue::Keyword(Keyword::False), .. }) => {
             tokens.next();
             Ok(Expr::Bool(false))
         }
-        Some(Token::Operator(Operator::Exclamation)) => {
+        Some(Token { value: TokenValue::Operator(Operator::Exclamation), .. }) => {
             tokens.next(); // Consume !
             Ok(Expr::BoolNot(Box::new(parse_bool(tokens)?)))
         }
@@ -216,12 +222,15 @@ fn parse_comparison<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T
     let mut expr = parse_additive_expr(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Operator(op)) if op == &Operator::Equals || op == &Operator::Greater
+            Some(tok) => match tok.value() {
+                TokenValue::Operator(op) if op == &Operator::Equal || op == &Operator::Greater
                 || op == &Operator::GreaterEqual || op == &Operator::Lesser || op == &Operator::LesserEqual
-                || op == &Operator::NotEquals => {
-                tokens.next();
-                let r_expr = parse_additive_expr(tokens)?;
-                expr = Expr::BinCmp(*op, Box::new(expr), Box::new(r_expr));
+                || op == &Operator::NotEqual => {
+                    tokens.next();
+                    let r_expr = parse_additive_expr(tokens)?;
+                    expr = Expr::BinCmp(*op, Box::new(expr), Box::new(r_expr));
+                }
+                _ => break,
             }
             _ => break,
         }
@@ -235,10 +244,13 @@ fn parse_additive_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a
     let mut expr = parse_multiplicative_expr(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Operator(op)) if op == &Operator::Plus || op == &Operator::Minus => {
-                tokens.next();
-                let r_expr = parse_multiplicative_expr(tokens)?;
-                expr = Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
+            Some(tok) => match tok.value() {
+                TokenValue::Operator(op) if op == &Operator::Plus || op == &Operator::Minus => {
+                    tokens.next();
+                    let r_expr = parse_multiplicative_expr(tokens)?;
+                    expr = Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
+                }
+                _ => break,
             }
             _ => break,
         }
@@ -251,10 +263,13 @@ fn parse_multiplicative_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<To
     let mut expr = parse_parenthetical_multiplicative_expr(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Operator(op)) if op == &Operator::Star || op == &Operator::Slash => {
-                tokens.next();
-                let r_expr = parse_parenthetical_multiplicative_expr(tokens)?;
-                expr = Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
+            Some(tok) => match tok.value() {
+                TokenValue::Operator(op) if op == &Operator::Star || op == &Operator::Slash => {
+                    tokens.next();
+                    let r_expr = parse_parenthetical_multiplicative_expr(tokens)?;
+                    expr = Expr::BinOp(*op, Box::new(expr), Box::new(r_expr));
+                }
+                _ => break,
             }
             _ => break,
         }
@@ -268,14 +283,14 @@ fn parse_parenthetical_multiplicative_expr<'a, T: Clone + Debug>(tokens: &mut Pe
     let mut expr = parse_power_expr(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Operator(op)) if op == &Operator::LParen => {
+            Some(Token { value: TokenValue::Operator(Operator::LParen), .. }) => {
                 tokens.next();
                 let mut internal_expr = parse_additive_expr(tokens)?;
                 match tokens.next() {
-                    Some(Token::Operator(op)) if op == &Operator::RParen => {
+                    Some(Token { value: TokenValue::Operator(Operator::RParen), .. }) => {
                         loop { // parse '^2' or likewise power expressions on individual parenthesis-covered expressions
                             match tokens.peek() {
-                                Some(Token::Operator(op)) if op == &Operator::Caret => {
+                                Some(Token { value: TokenValue::Operator(Operator::Caret), .. }) => {
                                     tokens.next();
                                     let exponent = parse_factorial_expr(tokens)?;
                                     internal_expr = Expr::Pow(Box::new(internal_expr), Box::new(exponent));
@@ -300,7 +315,7 @@ fn parse_power_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T
     let mut expr = parse_factorial_expr(tokens)?;
     loop {
         match tokens.peek() {
-            Some(Token::Operator(op)) if op == &Operator::Caret => {
+            Some(Token { value: TokenValue::Operator(Operator::Caret), .. }) => {
                 tokens.next();
                 let exponent = parse_factorial_expr(tokens)?;
                 expr = Expr::Pow(Box::new(expr), Box::new(exponent));
@@ -314,7 +329,7 @@ fn parse_power_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T
 fn parse_factorial_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
     let expr = parse_factor(tokens)?;
     match tokens.peek() {
-        Some(Token::Operator(Operator::Exclamation)) => {
+        Some(Token { value: TokenValue::Operator(Operator::Exclamation), .. }) => {
             tokens.next();
             Ok(Expr::Factorial(Box::new(expr)))
         }
@@ -328,37 +343,37 @@ fn parse_factorial_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'
 fn parse_factor<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
     match tokens.next() {
         // Parenthetical expressions such as `(expr)`.
-        Some(Token::Operator(Operator::LParen)) => {
+        Some(Token { value: TokenValue::Operator(Operator::LParen), .. }) => {
             let expr = parse_additive_expr(tokens);
             match tokens.next() {
-                Some(Token::Operator(Operator::RParen)) => expr,
+                Some(Token { value: TokenValue::Operator(Operator::RParen), .. }) => expr,
                 _ => Err(ExpectedClosingParenthesis),
             }
         }
-        Some(Token::Operator(Operator::Pipe)) => {
+        Some(Token { value: TokenValue::Operator(Operator::Pipe), .. }) => {
             let expr = parse_additive_expr(tokens)?;
             match tokens.next() {
-                Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Abs(Box::new(expr))),
+                Some(Token { value: TokenValue::Operator(Operator::Pipe), .. }) => Ok(Expr::Abs(Box::new(expr))),
                 _ => return Err(ExpectedClosingPipe),
             }
         }
-        Some(Token::Identifier(id)) => {
+        Some(Token { value: TokenValue::Identifier(id), .. }) => {
             match tokens.peek() {
-                Some(Token::Operator(Operator::LParen)) => { // CONSTRUCT FUNCTION_OR_ID
+                Some(Token { value: TokenValue::Operator(Operator::LParen), .. }) => { // Construct either a function or identifier
                     tokens.next(); // Consume '('
                     let expr = parse_additive_expr(tokens)?;
                     match tokens.next() {
-                        Some(Token::Operator(Operator::RParen)) => Ok(Expr::Function(id, Box::new(expr))),
+                        Some(Token { value: TokenValue::Operator(Operator::RParen), .. }) => Ok(Expr::Function(id, Box::new(expr))),
                         _ => Err(ExpectedClosingParenthesis),
                     }
                 }
 
                 // Functions (if next is LP or PIPE or NUM or ID)
-                Some(Token::Operator(Operator::Pipe)) => {
+                Some(Token { value: TokenValue::Operator(Operator::Pipe), .. }) => {
                     tokens.next(); // Consume '|'
                     let expr = parse_additive_expr(tokens)?;
                     match tokens.next() {
-                        Some(Token::Operator(Operator::Pipe)) => Ok(Expr::Abs(Box::new(expr))),
+                        Some(Token { value: TokenValue::Operator(Operator::Pipe), .. }) => Ok(Expr::Abs(Box::new(expr))),
                         _ => return Err(ExpectedClosingPipe),
                     }
                 }
@@ -366,30 +381,28 @@ fn parse_factor<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>)
                 //     tokens.next(); // Consume '-'
                 //     Ok(Expr::Function(id.clone(), Box::new(Expr::Neg(Box::new(parse_factor(tokens)?)))))
                 // }
-                Some(Token::Number(n)) => {
+                Some(Token { value: TokenValue::Number(n), .. }) => {
                     tokens.next(); // Consume number
-                    Ok(Expr::Function(id, Box::new(Expr::Constant(n.clone()))))
+                    Ok(Expr::Function(id, Box::new(Expr::Constant(*n.clone()))))
                 }
-                Some(Token::Identifier(_)) => { // Function-in-a-function OR a variable being used as a function argument
+                Some(Token { value: TokenValue::Identifier(_), .. }) => { // Function-in-a-function OR a variable being used as a function argument
                     Ok(Expr::Function(id, Box::new(parse_factor(tokens)?)))
                 }
 
-                // This is probably variable recall or variable assignment, but there is still hope...
+                // Okay, this is not a function, so it can either be a variable or assignment ...
                 t => match t {
-                    Some(Token::Operator(Operator::Equals)) => {
+                    Some(Token { value: TokenValue::Operator(Operator::Equal), .. }) => {
                         tokens.next();
                         Ok(Expr::Assignment(id, Box::new(parse_additive_expr(tokens)?)))
                     }
                     _ => Ok(Expr::Identifier(id)),
-                    //None => Ok(Expr::Identifier(id.clone())),
-                    //_ => Ok(Expr::Function(id.clone(), Box::new(parse_additive_expr(tokens)?))), // <--- HOPE
                 }
             }
         }
-        Some(Token::Operator(Operator::Minus)) => {
+        Some(Token { value: TokenValue::Operator(Operator::Minus), .. }) => {
             Ok(Expr::Neg(Box::new(parse_factor(tokens)?))) // Unary negative expressions like `-factor`.
         }
-        Some(Token::Number(n)) => Ok(Expr::Constant(n.clone())), // Number constants like `3`, `2.21`, `.34` or `-.2515262`.
+        Some(Token { value: TokenValue::Number(n), .. }) => Ok(Expr::Constant(*n.clone())), // Number constants like `3`, `2.21`, `.34` or `-.2515262`.
         t => Err(ExpectedFactor(t.cloned())), // The token being read isn't in the right place.
     }
 }
