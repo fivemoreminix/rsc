@@ -3,8 +3,8 @@ extern crate structopt;
 
 use std::io::prelude::*;
 
+use num::{traits::Signed, BigRational};
 use structopt::StructOpt;
-
 use colored::Colorize;
 
 use rsc::computer::*;
@@ -24,11 +24,19 @@ struct Opt {
     no_color: bool,
 }
 
+// struct BigNum(BigRational);
+
+
+
 fn main() {
     let opt = Opt::from_args();
 
     // let mut computer: Computer<f64> = Default::default();
-    let mut computer = Computer::<f64>::default();
+    // let mut computer = Computer::<f64>::default();
+    let mut computer = Computer::<BigRational>::new();
+
+    println!("{:?}", "3".parse::<BigRational>());
+
 
     loop {
         print!(
@@ -56,7 +64,7 @@ fn main() {
             continue;
         }
 
-        match tokenize::<f64>(&buffer) {
+        match tokenize::<BigRational>(&buffer) {
             Ok(tokens) => match parse(&tokens) {
                 Ok(ast) => {
                     if opt.ast {

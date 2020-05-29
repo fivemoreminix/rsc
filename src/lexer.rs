@@ -33,6 +33,7 @@ pub enum Keyword {
     Or
 }
 use self::Keyword::*;
+use crate::computer::Num;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token<'a, T> {
@@ -63,7 +64,7 @@ pub enum LexerError {
 /// ```
 pub fn tokenize<'a, T>(src: &'a str) -> Result<Vec<Token<'a, T>>, LexerError>
 where
-    T: std::str::FromStr,
+    T: Num,
 {
     let mut tokens = Vec::<Token<T>>::new();
 
@@ -124,8 +125,8 @@ where
                         }
                     }
 
-                    match (&src[start_idx..=end_idx]).parse::<T>() {
-                        Ok(num) => tokens.push(Token::Number(num)),
+                    match T::from_flt64_str(&src[start_idx..=end_idx]) {
+                        Some(num) => tokens.push(Token::Number(num)),
                         _ => return Err(LexerError::InvalidNumber(src[start_idx..=end_idx].to_owned())),
                     }
                 } else if c.is_alphabetic() {

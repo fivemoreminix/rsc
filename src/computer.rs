@@ -30,6 +30,7 @@ pub trait Num {
     fn abs(&self) -> Self;
     /// Raises this number to the power of another number.
     fn pow(&self, other: &Self) -> Self;
+    fn from_flt64_str(s: &str) -> Option<Self> where Self: std::marker::Sized;
 }
 
 /// Errors generated when computing for numbers.
@@ -57,12 +58,12 @@ use self::ComputeError::*;
 ///     computer::{Computer, ComputeError},
 /// };
 ///
-/// let mut computer = Computer::new(std::f64::consts::PI, std::f64::consts::E);
+/// let mut computer = Computer::new();
 /// assert_eq!(computer.eval("a = 2").unwrap(), 2.0);
 /// assert_eq!(computer.eval("a * 3").unwrap(), 6.0);
 ///
 /// // Err(EvalError::ComputeError(ComputeError::UnrecognizedIdentifier("a")))
-/// Computer::new(std::f64::consts::PI, std::f64::consts::E).eval("a");
+/// Computer::new().eval("a");
 /// ```
 #[derive(Clone)]
 pub struct Computer<'fun, T> {

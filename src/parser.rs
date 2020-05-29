@@ -213,7 +213,6 @@ fn parse_bool<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -
 }
 
 fn parse_comparison<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
-    dbg!("comparison");
     let mut expr = parse_additive_expr(tokens)?;
     loop {
         match tokens.peek() {
@@ -327,7 +326,6 @@ fn parse_factorial_expr<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'
 /// like numbers or expressions in parenthesis. The factor makes the recursion in `Expr`
 /// finite.
 fn parse_factor<'a, T: Clone + Debug>(tokens: &mut Peekable<Iter<Token<'a, T>>>) -> ParserResult<'a, T> {
-    dbg!("factor");
     match tokens.next() {
         // Parenthetical expressions such as `(expr)`.
         Some(Token::Operator(Operator::LParen)) => {

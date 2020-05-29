@@ -70,6 +70,8 @@ pub mod computer;
 pub mod lexer;
 pub mod parser;
 
+use num::{traits::Signed, BigInt, BigRational, Rational};
+
 use crate::computer::Num;
 use std::ops::*;
 
@@ -88,6 +90,36 @@ impl Num for f64 {
     }
     fn pow(&self, other: &Self) -> Self {
         self.powf(*other)
+    }
+    fn from_flt64_str(s: &str) -> Option<Self> {
+        s.parse().ok()
+    }
+}
+
+impl Num for BigRational {
+    fn zero() -> Self {
+        BigRational::new_raw(BigInt::from(0), BigInt::from(1))
+    }
+
+    fn one() -> Self {
+        BigRational::new_raw(BigInt::from(1), BigInt::from(1))
+    }
+
+    fn is_integer(&self) -> bool {
+        BigRational::is_integer(self)
+    }
+
+    fn abs(&self) -> Self {
+        Signed::abs(self)
+    }
+
+    fn pow(&self, other: &Self) -> Self {
+        self.clone() // TODO: implement
+    }
+
+    fn from_flt64_str(s: &str) -> Option<Self> {
+        let flt: f64 = s.parse().unwrap();
+        BigRational::from_float(flt)
     }
 }
 
