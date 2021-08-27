@@ -7,15 +7,15 @@ use structopt::StructOpt;
 
 use colored::Colorize;
 
-use rsc::computer::*;
-use rsc::lexer::*;
-use rsc::parser::*;
+use rsc::{tokenize, parse};
 
 #[derive(StructOpt)]
 #[structopt(
     about = "A scientific calculator for the terminal.\nManual: https://github.com/asmoaesl/rsc/wiki"
 )]
 struct Opt {
+    #[structopt()]
+    expr: Option<String>,
     #[structopt(long = "ast", help = "Prints abstract syntax tree")]
     ast: bool,
     #[structopt(long = "vars", help = "Prints variable map")]
@@ -24,11 +24,28 @@ struct Opt {
     no_color: bool,
 }
 
+fn evaluate(input: &str, ast: bool, vars: bool, no_color: bool) {
+    match tokenize(input) {
+        Ok(tokens) => {
+            println!("{:#?}", tokens);
+            match parse(&tokens) {
+                Ok(ast) => {
+                    println!("{:#?}", ast);
+                }
+                Err(e) => println!("{:?}", e),
+            }
+        }
+        Err(e) => eprintln!("{:?}", e),
+    }
+}
+
 fn main() {
     let opt = Opt::from_args();
 
-    // let mut computer: Computer<f64> = Default::default();
-    let mut computer = Computer::<f64>::default();
+    if let Some(expr) = opt.expr {
+        evaluate(&expr, opt.ast, opt.vars, opt.no_color);
+        return;
+    }
 
     loop {
         print!(
@@ -49,55 +66,57 @@ fn main() {
             break;
         } else if &buffer[..] == "clear" {
             for _ in 0..100 {
-                println!("");
+                println!();
             }
             continue;
         } else if buffer.starts_with(":") {
             continue;
         }
 
-        match tokenize::<f64>(&buffer) {
-            Ok(tokens) => match parse(&tokens) {
-                Ok(ast) => {
-                    if opt.ast {
-                        println!("{:#?}", ast);
-                    }
+        evaluate(&buffer, opt.ast, opt.vars, opt.no_color);
 
-                    match computer.compute(&ast) {
-                        Ok(num) => {
-                            if opt.vars {
-                                println!("{:#?}", computer.variables);
-                            }
-                            if opt.no_color {
-                                println!("{}", num);
-                            } else {
-                                println!("{}", num.to_string().yellow());
-                            }
-                        }
-                        Err(err) => {
-                            if opt.no_color {
-                                println!("Computation error: {:?}", err)
-                            } else {
-                                println!("{}", format!("Computation error: {:?}", err).red())
-                            }
-                        }
-                    }
-                }
-                Err(err) => {
-                    if opt.no_color {
-                        println!("Parser error: {:?}", err)
-                    } else {
-                        println!("{}", format!("Parser error: {:?}", err).red())
-                    }
-                }
-            },
-            Err(err) => {
-                if opt.no_color {
-                    println!("Lexer error: {:?}", err)
-                } else {
-                    println!("{}", format!("Lexer error: {:?}", err).red())
-                }
-            }
-        }
+        // match tokenize::<f64>(&buffer) {
+        //     Ok(tokens) => match parse(&tokens) {
+        //         Ok(ast) => {
+        //             if opt.ast {
+        //                 println!("{:#?}", ast);
+        //             }
+        //
+        //             match computer.compute(&ast) {
+        //                 Ok(num) => {
+        //                     if opt.vars {
+        //                         println!("{:#?}", computer.variables);
+        //                     }
+        //                     if opt.no_color {
+        //                         println!("{}", num);
+        //                     } else {
+        //                         println!("{}", num.to_string().yellow());
+        //                     }
+        //                 }
+        //                 Err(err) => {
+        //                     if opt.no_color {
+        //                         println!("Computation error: {:?}", err)
+        //                     } else {
+        //                         println!("{}", format!("Computation error: {:?}", err).red())
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         Err(err) => {
+        //             if opt.no_color {
+        //                 println!("Parser error: {:?}", err)
+        //             } else {
+        //                 println!("{}", format!("Parser error: {:?}", err).red())
+        //             }
+        //         }
+        //     },
+        //     Err(err) => {
+        //         if opt.no_color {
+        //             println!("Lexer error: {:?}", err)
+        //         } else {
+        //             println!("{}", format!("Lexer error: {:?}", err).red())
+        //         }
+        //     }
+        // }
     }
 }
