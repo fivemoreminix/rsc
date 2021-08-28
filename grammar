@@ -11,7 +11,7 @@ func_or_var_mul_expr = identifier, "(", [ expr { ",", expr } ], ")" ; (* need lo
 factorial_expr = factor, { "!" } ;
 factor = "(", expr, ")"
        | "|", expr, "|"
-       | "-", factor
+       | "-", expr
        | number
        | identifier ;
 

@@ -154,15 +154,14 @@ fn parse_func_or_var_mul<'t, 's>(tokens: &'s mut TokenIter<'t>) -> Option<ParseR
             }
 
             // Collecting function parameters
-            let mut params = Vec::with_capacity(2);
+            let mut params = Vec::with_capacity(3);
             while let Ok(expr) = parse_expr(tokens) {
                 params.push(expr);
                 match tokens.next() {
                     Some(Token { value: TokenValue::Symbol(SymbolVal::Comma), ..}) => {
-                        tokens.next(); // Consume ','
+                        continue;
                     }
                     Some(Token { value: TokenValue::Symbol(SymbolVal::RP), ..}) => {
-                        tokens.next(); // Consume ')'
                         break;
                     }
                     Some(tok) => return Some(Err(error!(UnexpectedToken(tok), tok.span.clone()))),
@@ -194,7 +193,7 @@ fn parse_factor<'t, 's>(tokens: &'s mut TokenIter<'t>) -> ParseResult<'t> {
             TokenValue::Num(num) => Ok(Expr::Num(num)),
             TokenValue::Id(id) => Ok(Expr::Var(id)),
             TokenValue::Op(op) => match op {
-                OpVal::Sub => Ok(Expr::Neg(Box::new(parse_factor(tokens)?))),
+                OpVal::Sub => Ok(Expr::Neg(Box::new(parse_expr(tokens)?))),
                 _ => Err(error!(UnexpectedToken(tok), tok.span.clone()))
             }
             TokenValue::Symbol(sym) => match sym {
