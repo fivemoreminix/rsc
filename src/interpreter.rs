@@ -9,8 +9,8 @@ pub enum Variant {
 
 #[derive(Debug, Clone)]
 pub enum InterpretError {
-    TooFewArgs(String),
-    TooManyArgs(String),
+    TooFewArgs(String, usize), // Id of function, min args
+    TooManyArgs(String, usize), // Id of function, max args
     VarDoesNotExist(String),
     VarIsNotFunction(String),
     FunctionNameUsedLikeVar(String),
@@ -93,9 +93,9 @@ impl Default for Interpreter {
         vars.insert(String::from("pi"), Variant::Num(std::f64::consts::PI));
         vars.insert(String::from("abs"), Variant::Function(|args| {
             if args.len() > 1 {
-                Err(InterpretError::TooManyArgs(String::from("abs")))
+                Err(InterpretError::TooManyArgs(String::from("abs"), 1))
             } else if args.len() < 1 {
-                Err(InterpretError::TooFewArgs(String::from("abs")))
+                Err(InterpretError::TooFewArgs(String::from("abs"), 1))
             } else {
                 Ok(args[0].abs())
             }
