@@ -76,7 +76,7 @@ const COMMANDS: [(&str, &str); 5] = [
 fn print_help(no_color: bool) {
     println!("Commands");
     for (name, desc) in COMMANDS {
-        println!("{:<10} {}", name.green(), desc);
+        println!("{:<10} {}", if no_color { name.green().clear() } else { name.green() }, desc);
     }
 }
 
