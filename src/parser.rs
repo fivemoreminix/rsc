@@ -29,10 +29,18 @@ macro_rules! error {
 
 type TokenIter<'t> = PeekMoreIterator<Iter<'t, Token<'t>>>;
 
-#[inline(always)]
+#[inline]
 pub fn parse<'input>(tokens: &'input [Token<'input>]) -> ParseResult<'input> {
     let mut iter = tokens.iter().peekmore();
-    parse_expr(&mut iter)
+    let result = parse_expr(&mut iter);
+    match result {
+        Ok(_) => if let Some(tok) = iter.next() {
+            Err(error!(UnexpectedToken(tok), tok.span.clone()))
+        } else {
+            result
+        }
+        Err(_) => result,
+    }
 }
 
 #[inline(always)]
