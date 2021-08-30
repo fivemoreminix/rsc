@@ -5,7 +5,7 @@ use std::ops::Deref;
 #[derive(Clone)]
 pub enum Variant<N: Num> {
     Num(N),
-    Function(fn(&[N]) -> Result<N, InterpretError>),
+    Function(fn(&str, &[N]) -> Result<N, InterpretError>),
 }
 
 #[derive(Debug, Clone)]
@@ -56,7 +56,7 @@ impl<N: Num> Interpreter<N> {
                         } else {
                             Err(InterpretError::VarIsNotFunction(id.to_string()))
                         },
-                        Variant::Function(func) => func(&args),
+                        Variant::Function(func) => func(id, &args),
                     }
                 } else {
                     Err(InterpretError::VarDoesNotExist(id.to_string()))
@@ -93,7 +93,7 @@ impl Default for Interpreter<f64> {
     fn default() -> Self {
         let mut vars = HashMap::new();
         vars.insert(String::from("pi"), Variant::Num(std::f64::consts::PI));
-        vars.insert(String::from("abs"), Variant::Function(|args| {
+        vars.insert(String::from("abs"), Variant::Function(|_, args| {
             if args.len() > 1 {
                 Err(InterpretError::TooManyArgs(String::from("abs"), 1))
             } else if args.len() < 1 {
