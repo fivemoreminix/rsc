@@ -2,7 +2,8 @@ use std::io::prelude::*;
 use structopt::StructOpt;
 use colored::{Colorize, ColoredString};
 
-use rsc::{tokenize, TokenizeError, parse, ParseError, Interpreter, InterpretError, Variant};
+use rsc::{tokenize, TokenizeError, parse, ParseError, Interpreter, InterpretError, Variant, ParseErrorCode};
+use std::ops::Range;
 
 #[derive(StructOpt)]
 #[structopt(
@@ -27,9 +28,28 @@ fn main() {
     let mut interpreter = Interpreter::default();
 
     if let Some(expr) = opt.expr {
-        evaluate(&expr, &mut interpreter, opt.tokens, opt.bexpr, opt.vars, opt.no_color);
-        return;
+        match tokenize(&expr) {
+            Ok(tokens) => {
+                match parse(&tokens) {
+                    Ok(expr) => {
+                        match interpreter.eval(&expr) {
+                            Ok(result) => {
+                                println!("{}", result);
+                                return;
+                            }
+                            Err(e ) => eprintln!("{:?}", e),
+                        }
+                    }
+                    Err(ParseError { code, span }) => eprintln!("{:?} at {:?}", code, span),
+                }
+            }
+            Err(TokenizeError { code, span }) => eprintln!("{:?} at {:?}", code, span),
+        }
+        std::process::exit(1);
     }
+
+    println!("RSC interactive expression interpreter.");
+    println!("Try \"help\" for commands and examples.");
 
     loop {
         print!(
@@ -60,7 +80,10 @@ fn main() {
         } else if buffer.starts_with(":") {
             continue;
         } else {
-            evaluate(&buffer, &mut interpreter, opt.tokens, opt.bexpr, opt.vars, opt.no_color);
+            match evaluate(&buffer, &mut interpreter, opt.tokens, opt.bexpr, opt.vars, opt.no_color) {
+                Ok(result) => println!(":{}", result),
+                Err(result) => eprintln!("{}", result),
+            }
         }
     }
 }
@@ -78,6 +101,11 @@ fn print_help(no_color: bool) {
     for (name, desc) in COMMANDS {
         println!("{:<10} {}", if no_color { name.green().clear() } else { name.green() }, desc);
     }
+    println!("\nExamples");
+    println!("\t12.3(0.7)");
+    println!("\t|-9| + 3!");
+    println!("\tx = abs(5)");
+    println!("\t-x^4");
 }
 
 fn get_variant_ord(v: &Variant) -> usize {
@@ -105,32 +133,50 @@ fn print_vars(interpreter: &Interpreter, no_color: bool) {
     }
 }
 
-fn evaluate(input: &str, interpreter: &mut Interpreter, btokens: bool, bexpr: bool, bvars: bool, bno_color: bool) {
+fn format_error(span: Range<usize>, message: &str) -> String {
+    format!(" {}{} {}", " ".repeat(span.start), "^".repeat(span.len()).red(), message.red())
+}
+
+fn evaluate(input: &str, interpreter: &mut Interpreter, btokens: bool, bexpr: bool, bvars: bool, bno_color: bool) -> Result<String, String> {
+    let mut output = String::new();
     match tokenize(input) {
         Ok(tokens) => {
             if btokens {
                 let fmt = format!("Tokens: {:?}", tokens);
-                println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
+                output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
             }
             match parse(&tokens) {
                 Ok(expr) => {
                     if bexpr {
                         let fmt = format!("Expr: {:#?}", expr);
-                        println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
+                        output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
                     }
 
                     match interpreter.eval(&expr) {
-                        Ok(result) => println!(":{}", result),
+                        Ok(result) => {
+                            output.push_str(&format!("{}", result));
+                        },
                         Err(err) => {
                             let fmt = format!("{}", display_interpret_error(&err));
-                            println!("{}", if bno_color { fmt } else { fmt.red().to_string() })
+                            output.push_str(&format!("{}", if bno_color { fmt } else { fmt.red().to_string() }));
+                            return Err(output);
                         },
                     }
                 }
-                Err(e) => println!("{:?}", e),
+                Err(ParseError { code, span }) => {
+                    if code == ParseErrorCode::UnexpectedEOF {
+                        output.push_str(&format!("{}", format_error(input.len()..input.len()+1, &format!("{:?}", code))));
+                    } else {
+                        output.push_str(&format!("{}", format_error(span, &format!("{:?}", code))));
+                    }
+                    return Err(output);
+                },
             }
         }
-        Err(e) => eprintln!("{:?}", e),
+        Err(TokenizeError { code, span }) => {
+            output.push_str(&format!("{}", format_error(span, &format!("{:?}", code))));
+            return Err(output);
+        },
     }
     if bvars {
         for (id, variant) in &interpreter.vars {
@@ -140,9 +186,10 @@ fn evaluate(input: &str, interpreter: &mut Interpreter, btokens: bool, bexpr: bo
             } else {
                 fmt = format!("{}(..)", id);
             }
-            println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
+            output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
         }
     }
+    Ok(output)
 }
 
 #[inline(always)]
