@@ -4,7 +4,7 @@ use std::slice::Iter;
 use std::iter::Peekable;
 use std::ops::Range;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ParseErrorCode<'t> {
     ExpectedValue,
     ExpectedClosingParen,
