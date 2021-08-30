@@ -55,7 +55,6 @@ impl<N: Num> Interpreter<N> {
                     _ => todo!("implement algebra solving"),
                 }
             }
-            Expr::Factorial(expr) => Ok(self.eval(expr)?.factorial()),
             Expr::FuncOrVarMul(id, exprs) => {
                 let mut args = Vec::with_capacity(exprs.len());
                 for expr in exprs {
@@ -129,6 +128,19 @@ impl Default for Interpreter<f64> {
         vars.insert(String::from("sqrt"), Variant::Function(|id, args| {
             match ensure_arg_count(1, 1, args.len(), id) {
                 Ok(()) => Ok(args[0].sqrt()),
+                Err(e) => Err(e),
+            }
+        }));
+        vars.insert(String::from("factorial"), Variant::Function(|id, args| {
+            match ensure_arg_count(1, 1, args.len(), id) {
+                Ok(()) => {
+                    let n = args[0];
+                    if n <= 1.0 {
+                        Ok(1.0)
+                    } else {
+                        Ok((1..=n as u64).product::<u64>() as f64)
+                    }
+                }
                 Err(e) => Err(e),
             }
         }));

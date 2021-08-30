@@ -17,20 +17,6 @@ pub trait Num: Debug + Clone + PartialEq + PartialOrd + FromStr + Add<Output=Sel
     fn one() -> Self;
     fn is_whole(&self) -> bool;
     fn pow(self, other: Self) -> Self;
-    fn factorial(self) -> Self {
-        let one = Num::one();
-        if self <= one {
-            one
-        } else {
-            let mut result = one;
-            let mut i = result.clone() + Num::one();
-            while i <= self {
-                result *= i.clone();
-                i += Num::one();
-            }
-            result
-        }
-    }
 }
 
 // Default impls for Num

@@ -186,7 +186,7 @@ fn parse_factorial<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseRes
     while let Some(peek_tok) = tokens.peek() {
         if peek_tok.value == TokenValue::Op(OpVal::Exclaim) {
             tokens.next(); // Consume '!'
-            result = Expr::Factorial(Box::new(result));
+            result = Expr::FuncOrVarMul("factorial", vec!(result));
         } else {
             break;
         }
