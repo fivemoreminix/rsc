@@ -18,11 +18,13 @@ pub trait Num: Debug + Clone + PartialEq + FromStr + Add<Output=Self> + Sub<Outp
 
 // Default impls for Num
 impl Num for f32 {
+    #[inline(always)]
     fn pow(self, other: Self) -> Self {
         self.powf(other)
     }
 }
 impl Num for f64 {
+    #[inline(always)]
     fn pow(self, other: Self) -> Self {
         self.powf(other)
     }
