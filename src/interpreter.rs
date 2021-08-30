@@ -5,16 +5,16 @@ use std::ops::Deref;
 #[derive(Clone)]
 pub enum Variant<N: Num> {
     Num(N),
-    Function(fn(&str, &[N]) -> Result<N, InterpretError>),
+    Function(for<'expr> fn(&'expr str, &[N]) -> Result<N, InterpretError<'expr>>),
 }
 
 #[derive(Debug, Clone)]
-pub enum InterpretError {
-    TooFewArgs(String, usize), // Id of function, min args
-    TooManyArgs(String, usize), // Id of function, max args
-    VarDoesNotExist(String),
-    VarIsNotFunction(String),
-    FunctionNameUsedLikeVar(String),
+pub enum InterpretError<'expr> {
+    TooFewArgs(&'expr str, usize), // Id of function, min args
+    TooManyArgs(&'expr str, usize), // Id of function, max args
+    VarDoesNotExist(&'expr str),
+    VarIsNotFunction(&'expr str),
+    FunctionNameUsedLikeVar(&'expr str),
 }
 
 #[derive(Clone)]
@@ -24,7 +24,7 @@ pub struct Interpreter<N: Num> {
 
 impl<N: Num> Interpreter<N> {
     #[inline(always)]
-    pub fn new() -> Interpreter<N> {
+    pub fn new<'l>() -> Interpreter<N> {
         Interpreter { vars: HashMap::new() }
     }
 
@@ -38,7 +38,7 @@ impl<N: Num> Interpreter<N> {
         self.vars.remove(name)
     }
 
-    pub fn eval(&mut self, expr: &Expr<N>) -> Result<N, InterpretError> {
+    pub fn eval<'expr>(&mut self, expr: &'expr Expr<N>) -> Result<N, InterpretError<'expr>> {
         // simple, naive recursive tree walk
         match expr {
             Expr::Eq(lhs, rhs) => {
@@ -57,12 +57,12 @@ impl<N: Num> Interpreter<N> {
                             let arg = args.remove(0);
                             Ok(n.clone().mul(arg))
                         } else {
-                            Err(InterpretError::VarIsNotFunction(id.to_string()))
+                            Err(InterpretError::VarIsNotFunction(id))
                         },
                         Variant::Function(func) => func(id, &args),
                     }
                 } else {
-                    Err(InterpretError::VarDoesNotExist(id.to_string()))
+                    Err(InterpretError::VarDoesNotExist(id))
                 }
             },
             Expr::Neg(expr) => Ok(-self.eval(expr)?),
@@ -83,10 +83,10 @@ impl<N: Num> Interpreter<N> {
             Expr::Var(id) => if let Some(var) = self.vars.get(*id) {
                 match var {
                     Variant::Num(n) => Ok(n.clone()),
-                    Variant::Function(_) => Err(InterpretError::FunctionNameUsedLikeVar(id.to_string())),
+                    Variant::Function(_) => Err(InterpretError::FunctionNameUsedLikeVar(id)),
                 }
             } else {
-                Err(InterpretError::VarDoesNotExist(id.to_string()))
+                Err(InterpretError::VarDoesNotExist(id))
             },
         }
     }
@@ -95,9 +95,9 @@ impl<N: Num> Interpreter<N> {
 #[inline]
 pub fn ensure_arg_count(min: usize, max: usize, args_len: usize, func_id: &str) -> Result<(), InterpretError> {
     if args_len < min {
-        Err(InterpretError::TooFewArgs(func_id.to_string(), min))
+        Err(InterpretError::TooFewArgs(func_id, min))
     } else if args_len > max {
-        Err(InterpretError::TooManyArgs(func_id.to_string(), max))
+        Err(InterpretError::TooManyArgs(func_id, max))
     } else {
         Ok(())
     }
