@@ -1,7 +1,7 @@
-use crate::{Token, Expr, TokenValue, OpVal, SymbolVal, Num};
-use peekmore::{PeekMoreIterator, PeekMore};
-use std::slice::Iter;
+use crate::{Expr, Num, OpVal, SymbolVal, Token, TokenValue};
+use peekmore::{PeekMore, PeekMoreIterator};
 use std::ops::Range;
+use std::slice::Iter;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ParseErrorCode<'t, N: Num> {
@@ -22,7 +22,10 @@ pub type ParseResult<'input, N> = Result<Expr<'input, N>, ParseError<'input, N>>
 
 macro_rules! error {
     ($code:expr, $span:expr) => {
-        ParseError { code: $code, span: $span }
+        ParseError {
+            code: $code,
+            span: $span,
+        }
     };
 }
 
@@ -33,10 +36,12 @@ pub fn parse<'input, N: Num>(tokens: &'input [Token<'input, N>]) -> ParseResult<
     let mut iter = tokens.iter().peekmore();
     let result = parse_expr(&mut iter);
     match result {
-        Ok(_) => if let Some(tok) = iter.next() {
-            Err(error!(UnexpectedToken(tok), tok.span.clone()))
-        } else {
-            result
+        Ok(_) => {
+            if let Some(tok) = iter.next() {
+                Err(error!(UnexpectedToken(tok), tok.span.clone()))
+            } else {
+                result
+            }
         }
         Err(_) => result,
     }
@@ -134,9 +139,14 @@ fn parse_parentheses_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> Pa
 // This function returns Option to the result, because it doesn't *have* to parse a value.
 // And because it should only be used by parse_parentheses_mul.
 #[inline]
-fn parse_func_or_var_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> Option<ParseResult<'t, N>> {
+fn parse_func_or_var_mul<'t, 's, N: Num>(
+    tokens: &'s mut TokenIter<'t, N>,
+) -> Option<ParseResult<'t, N>> {
     match tokens.peek() {
-        Some(Token { value: TokenValue::Id(id), .. }) => {
+        Some(Token {
+            value: TokenValue::Id(id),
+            ..
+        }) => {
             // Check for opening parentheses
             if let Some(tok) = tokens.peek_nth(1) {
                 if tok.value != TokenValue::Symbol(SymbolVal::LP) {
@@ -165,10 +175,16 @@ fn parse_func_or_var_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> Op
             while let Ok(expr) = parse_expr(tokens) {
                 params.push(expr);
                 match tokens.next() {
-                    Some(Token { value: TokenValue::Symbol(SymbolVal::Comma), ..}) => {
+                    Some(Token {
+                        value: TokenValue::Symbol(SymbolVal::Comma),
+                        ..
+                    }) => {
                         continue;
                     }
-                    Some(Token { value: TokenValue::Symbol(SymbolVal::RP), ..}) => {
+                    Some(Token {
+                        value: TokenValue::Symbol(SymbolVal::RP),
+                        ..
+                    }) => {
                         break;
                     }
                     Some(tok) => return Some(Err(error!(UnexpectedToken(tok), tok.span.clone()))),
@@ -186,7 +202,7 @@ fn parse_factorial<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseRes
     while let Some(peek_tok) = tokens.peek() {
         if peek_tok.value == TokenValue::Op(OpVal::Exclaim) {
             tokens.next(); // Consume '!'
-            result = Expr::FuncOrVarMul("factorial", vec!(result));
+            result = Expr::FuncOrVarMul("factorial", vec![result]);
         } else {
             break;
         }
@@ -201,8 +217,8 @@ fn parse_factor<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult
             TokenValue::Id(id) => Ok(Expr::Var(id)),
             TokenValue::Op(op) => match op {
                 OpVal::Sub => Ok(Expr::Neg(Box::new(parse_expr(tokens)?))),
-                _ => Err(error!(UnexpectedToken(tok), tok.span.clone()))
-            }
+                _ => Err(error!(UnexpectedToken(tok), tok.span.clone())),
+            },
             TokenValue::Symbol(sym) => match sym {
                 SymbolVal::LP => {
                     let expr = parse_expr(tokens)?;
@@ -231,10 +247,8 @@ fn parse_factor<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult
                     }
                 }
                 _ => Err(error!(UnexpectedToken(tok), tok.span.clone())),
-            }
-        }
-        None => {
-            Err(error!(UnexpectedEOF, 0..0))
-        }
+            },
+        },
+        None => Err(error!(UnexpectedEOF, 0..0)),
     }
 }

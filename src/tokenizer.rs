@@ -57,19 +57,25 @@ pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
 
     macro_rules! push_token {
         ($token:expr, $pos:expr, $len:expr) => {
-            tokens.push(Token { value: $token, span: Range { start: $pos, end: $pos + $len } })
+            tokens.push(Token {
+                value: $token,
+                span: Range {
+                    start: $pos,
+                    end: $pos + $len,
+                },
+            })
         };
     }
 
     while let Some((cpos, c)) = chars.next() {
         match c {
-            '+' => push_token!(Op(Add),     cpos, 1),
-            '-' => push_token!(Op(Sub),     cpos, 1),
-            '*' => push_token!(Op(Mul),     cpos, 1),
-            '/' => push_token!(Op(Div),     cpos, 1),
-            '%' => push_token!(Op(Mod),     cpos, 1),
-            '^' => push_token!(Op(Pow),     cpos, 1),
-            '=' => push_token!(Op(Eq),      cpos, 1),
+            '+' => push_token!(Op(Add), cpos, 1),
+            '-' => push_token!(Op(Sub), cpos, 1),
+            '*' => push_token!(Op(Mul), cpos, 1),
+            '/' => push_token!(Op(Div), cpos, 1),
+            '%' => push_token!(Op(Mod), cpos, 1),
+            '^' => push_token!(Op(Pow), cpos, 1),
+            '=' => push_token!(Op(Eq), cpos, 1),
             '!' => push_token!(Op(Exclaim), cpos, 1),
 
             '(' => push_token!(Symbol(LP), cpos, 1),
@@ -80,7 +86,7 @@ pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
             _ => {
                 if c.is_digit(10) || c == '.' {
                     let start = cpos;
-                    let mut end = start+1;
+                    let mut end = start + 1;
                     while let Some((_, nc)) = chars.peek() {
                         if nc.is_digit(10) || *nc == '.' {
                             chars.next(); // Consume nc
@@ -90,13 +96,16 @@ pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
                         }
                     }
                     if let Ok(num) = input[start..end].parse::<N>() {
-                        push_token!(Num(num), start, end-start);
+                        push_token!(Num(num), start, end - start);
                     } else {
-                        return Err(TokenizeError { code: InvalidNumber(&input[start..end]), span: start..end });
+                        return Err(TokenizeError {
+                            code: InvalidNumber(&input[start..end]),
+                            span: start..end,
+                        });
                     }
                 } else if c.is_alphabetic() {
                     let start = cpos;
-                    let mut end = start+1;
+                    let mut end = start + 1;
                     while let Some((_, nc)) = chars.peek() {
                         if nc.is_alphanumeric() {
                             chars.next(); // Consume nc
@@ -105,9 +114,12 @@ pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
                             break;
                         }
                     }
-                    push_token!(Id(&input[start..end]), start, end-start);
+                    push_token!(Id(&input[start..end]), start, end - start);
                 } else if !c.is_whitespace() {
-                    return Err(TokenizeError { code: UnrecognizedChar(c), span: cpos..cpos+1 });
+                    return Err(TokenizeError {
+                        code: UnrecognizedChar(c),
+                        span: cpos..cpos + 1,
+                    });
                 }
             }
         }

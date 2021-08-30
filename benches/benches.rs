@@ -2,8 +2,8 @@
 
 extern crate test;
 
-use test::{Bencher, black_box};
-use rsc::{tokenize, parse, Interpreter, Variant};
+use rsc::{parse, tokenize, Interpreter, Variant};
+use test::{black_box, Bencher};
 
 const SHORT_STR: &str = "5.324 * 54(pad)";
 const LONG_STR: &str = "0.999998543 / sqrt(54 ^ (x(3))) % applesauce + bees";
@@ -13,9 +13,7 @@ macro_rules! tokenizer_bench {
     ($name:ident, $input:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            b.iter(|| {
-                tokenize::<f64>(black_box($input))
-            });
+            b.iter(|| tokenize::<f64>(black_box($input)));
         }
     };
 }
@@ -25,9 +23,7 @@ macro_rules! parser_bench {
         #[bench]
         fn $name(b: &mut Bencher) {
             let tokens = tokenize::<f64>($input).unwrap();
-            b.iter(|| {
-                parse(black_box(&tokens))
-            })
+            b.iter(|| parse(black_box(&tokens)))
         }
     };
 }
@@ -47,7 +43,7 @@ macro_rules! eval_bench {
                 i.eval(black_box(&expr)).unwrap();
             })
         }
-    }
+    };
 }
 
 tokenizer_bench!(tokenizer_short_expr, SHORT_STR);

@@ -1,4 +1,4 @@
-use crate::{OpVal, Num};
+use crate::{Num, OpVal};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr<'input, N: Num> {
