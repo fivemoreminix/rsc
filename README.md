@@ -2,101 +2,139 @@ RSC, the Calculator for Rust Code
 =================================
 ![](https://img.shields.io/crates/l/rsc.svg) ![](https://img.shields.io/badge/status-stable-blue.svg)
 
-[Changelog](CHANGELOG.md)
+**New**: crate updated to 3.0, read the [Changelog](CHANGELOG.md).
 
-**RSC is a handwritten scientific calculator for converting an equation inside a string into a result.** RSC is designed to be very lightweight and have as few dependencies as possible. It has the goal of just doing a single thing really well, and enabling anyone to extend it with more features.
+**RSC is a handwritten scientific calculator for interpreting equations inside strings.** RSC is designed to do a single
+thing very well, enabling anyone to extend it with more features.
 
-RSC is also designed with the goal to not become bloated software. **RSC will not receive frequent updates, but that does not mean it is old or unmaintained.** That being said, RSC may still receive internal updates with relation to speed or resource usage.
+RSC intends to beat Wirth's Law. **Therefore, RSC will not receive many additions.** It will still receive updates with
+relation to efficiency.
 
-## Example
-### Library
-RSC is very painless to use. For simple, one-off expression solving:
+## Library
 ```rust
-use rsc::eval;
+use rsc::{tokenize, parse, Interpreter};
+
+// Maybe you write a wrapper function
+fn evaluate(input: &str, interpreter: &mut Interpreter<f64>) -> Result<f64, ()> {
+    // You have to call each function in the pipeline, but this gives you the most
+    // control over error handling and performance.
+    match tokenize(input) { // Step 1: splits input into symbols, words, and numbers
+        Ok(tokens) => match parse(&tokens) { // Step 2: builds an Expr using tokens
+            Ok(expr) => match interpreter.eval(&expr) { // Step 3: interprets the Expr
+                Ok(result) => println!("{}", result),
+                Err(interpret_error) => eprintln!("{:?}", interpret_error),
+            },
+            Err(parse_error) => eprintln!("{:?}", parse_error),
+        },
+        Err(tokenize_error) => eprintln!("{:?}", tokenize_error),
+    }
+}
 
 fn main() {
-    assert!(eval("5^2").unwrap() == 25.0);
-    assert!(eval("x = 5").unwrap() == 5.0);
-    assert!(eval("x").is_err()); // Previously assigned variables are discarded
+    // Constructs an f64 interpreter with included variables
+    let mut interpreter = Interpreter::default();
+    
+    evaluate("5^2", &mut interpreter); // prints "25"
+    evaluate("x = 3", &mut interpreter); // prints "3"
+    evaluate("x(3) + 1", &mut interpreter); // prints "10"
 }
 ```
-In order to keep variables, you must create a `Computer` instance:
+
+Variables are stored in the `Interpreter`:
 ```rust
-use rsc::computer::Computer;
+use rsc::{tokenize, parse, Interpreter, Variant, InterpretError};
+
+// assume you still had your evaluate function above
 
 fn main() {
-    let mut c = Computer::<f64>::default();
-
-    assert!(c.eval("x = 5").unwrap() == 5.0);
-    assert!(c.eval("x^2").unwrap() == 25.0);
+    // Create a completely empty interpreter for f64 calculations
+    let mut i = Interpreter::<f64>::new();
+    
+    // Create some variables
+    i.set_var(String::from("pi"), Variant::Num(std::f64::consts::PI));
+    i.set_var(String::from("double"), Variant::Function(|name, args| {
+        if args.len() < 1 {
+            Err(InterpretError::TooFewArgs(name, 1))
+        } else if args.len() > 1 {
+            Err(InterpretError::TooManyArgs(name, 1))
+        } else {
+            Ok(args[0] * 2) // get the only argument and double it
+        }
+    }));
+    
+    evaluate("double(pi)", &mut i); // prints "6.283185307179586"
 }
 ```
-### Executable
-Using RSC as the actual program provides a simple interface for solving expressions. A right arrow shows where the user can input an expression, and upon pressing the Return key, the result of the entered expression is displayed on the next line.
+
+Because it can be redundant checking that functions received the correct number of arguments (if you wish to do so at all),
+I made a helper function called `ensure_arg_count`. The above function redefined:
+
 ```rust
-PS C:\Users\Luke> rsc
->2+2
-4
->a = 2
-2
->a^3
-8
->b
-Compute error: UnrecognizedIdentifier("b")
->(b = a^2) + 3
-7
->b
-4
->sqrt((6.1--2.22)^2 + (-24-10.5)^2)
-35.48904619738322
->|-3|
-3
->abs -3
-3
-```
-Much more information can be found in [the documentation](https://docs.rs/rsc/).
-#### Debug w/ Executable
-RSC can be run with the `ast` flag and show the internal expression that was created by the parser. This is most commonly used for entertainment purposes 😛.
-```rust
-PS C:\Users\Luke> rsc ast
->(a = 2)^3
-Pow(
-    Assignment(
-        "a",
-        Constant(
-            2.0
-        )
-    ),
-    Constant(
-        3.0
-    )
-)
-8
+use rsc::ensure_arg_count;
+
+i.set_var(String::from("double"), Variant::Function(|name, args| {
+    // return Err if args are not within the min and max count
+    ensure_arg_count(1, 1, args.len(), name)?;
+    Ok(args[0] * 2)
+}));
 ```
 
-## Obtaining RSC
-If you would like to install RSC as a program onto your computer, there is information [here](https://github.com/asmoaesl/rsc/wiki/Executable).
-
-## Performance
-RSC computes next to instantaneously, even with debug builds. The following output is the time (in nanoseconds) the different operations take to process `sqrt((6.1--2.22)^2 + (-24-10.5)^2)`, where "bench_eval" is all of them at once. More info at [lib.rs](https://github.com/asmoaesl/rsc/blob/master/src/lib.rs).
+## Executable
+### First you might need to build RSC as an executable
+```shell
+cargo build --release --features=executable
 ```
-PS C:\Users\Luke\Documents\Projects\rsc> cargo bench
-    Finished release [optimized] target(s) in 0.02s
-     Running target\release\deps\rsc-74a7d2c06ab98eee.exe
+The `executable` feature is required to tell the crate to bring in certain dependencies only for the executable version.
 
-running 4 tests
-test tests::bench_compute  ... bench:         231 ns/iter (+/- 10)
-test tests::bench_eval     ... bench:       6,272 ns/iter (+/- 504)
-test tests::bench_parse    ... bench:       1,624 ns/iter (+/- 133)
-test tests::bench_tokenize ... bench:       4,302 ns/iter (+/- 1,462)
-...
+### Usage
+```shell
+RSC interactive expression interpreter.
+Try "help" for commands and examples.
+>sqrt(15+3)
+:4.242640687119285
+>:square root
+>sqrt(15, 3)
+Function "sqrt" received more than the maximum 1 argument.
+> |-5|
+:5
+>abs(-5)
+:5
+>sqrt(4)(2)
+        ^ UnexpectedToken(Token { value: Symbol(LP), span: 7..8 })
+>(sqrt(4))(2)
+:4
+>x = 1.24
+:1.24
+>x(4)
+:4.96
+>vars
+factorial(..)
+sqrt(..)
+abs(..)
+x = 1.24
+e = 2.718281828459045
+pi = 3.141592653589793
+tau = 6.283185307179586
 ```
+
+Expressions can be passed to rsc directly:
+```shell
+rsc "12/sqrt(128)" > result.txt
+```
+
+There are various flags you can pass. Try:
+```shell
+rsc -tev
+```
+
+## Notes About Performance
+ * The lexer is iterative but could easily be optimized.
+ * The parser is an LL(2) recursive-descent parser, and that's the simplest, most brute-force parsing solution I came up with. But, I plan to replace it with an LR(2) operator-precedence parser, which would be much more efficient. The parser is currently the slowest of the 3 phases.
+ * The `Interpreter::eval` function uses recursion for simplicity. Removing the recursion could prevent unnecessary pushing and popping of the frame pointer, providing better performance where recursive calls are found.
+ * Performance improvement PRs are very much welcomed and probably easy!
 
 ## Stability
-RSC will not have any major changes to its syntax. It will remain to be consistent for a long time. It is up to forkers to make different tastes of RSC. It will also forever keep the same open-source permissions.
+RSC will not have any major changes to its syntax. It will remain consistent for a long time. It is up to forkers to make different tastes of RSC. It will also forever keep the same open-source permissions.
 
 ## License
 RSC is MIT licensed. RSC will always remain free to modify and use without attribution.
-
-## Related Projects
-* [rscplot](https://github.com/asmoaesl/rscplot): A graphing calculator dependent on RSC for solving expressions.
