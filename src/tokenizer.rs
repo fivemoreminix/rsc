@@ -44,7 +44,6 @@ pub enum TokenizeErrorCode<'input> {
     UnrecognizedChar(char),
 }
 use TokenizeErrorCode::*;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TokenizeError<'input> {

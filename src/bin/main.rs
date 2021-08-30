@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use structopt::StructOpt;
-use colored::{Colorize, ColoredString};
+use colored::Colorize;
 
 use rsc::{tokenize, TokenizeError, parse, ParseError, Interpreter, InterpretError, Variant, ParseErrorCode, Num};
 use std::ops::Range;

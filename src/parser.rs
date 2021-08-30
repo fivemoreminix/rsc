@@ -1,7 +1,6 @@
 use crate::{Token, Expr, TokenValue, OpVal, SymbolVal, Num};
 use peekmore::{PeekMoreIterator, PeekMore};
 use std::slice::Iter;
-use std::iter::Peekable;
 use std::ops::Range;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
