@@ -1,12 +1,12 @@
-use crate::OpVal;
+use crate::{OpVal, Num};
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expr<'input> {
-    Eq(Box<Expr<'input>>, Box<Expr<'input>>),
-    Factorial(Box<Expr<'input>>),
-    FuncOrVarMul(&'input str, Vec<Expr<'input>>),
-    Neg(Box<Expr<'input>>),
-    Num(f64), // TODO: replace with num crate type
-    Op(OpVal, Box<Expr<'input>>, Box<Expr<'input>>),
+pub enum Expr<'input, N: Num> {
+    Eq(Box<Expr<'input, N>>, Box<Expr<'input, N>>),
+    Factorial(Box<Expr<'input, N>>),
+    FuncOrVarMul(&'input str, Vec<Expr<'input, N>>),
+    Neg(Box<Expr<'input, N>>),
+    Num(&'input N),
+    Op(OpVal, Box<Expr<'input, N>>, Box<Expr<'input, N>>),
     Var(&'input str),
 }

@@ -2,8 +2,9 @@ use std::io::prelude::*;
 use structopt::StructOpt;
 use colored::{Colorize, ColoredString};
 
-use rsc::{tokenize, TokenizeError, parse, ParseError, Interpreter, InterpretError, Variant, ParseErrorCode};
+use rsc::{tokenize, TokenizeError, parse, ParseError, Interpreter, InterpretError, Variant, ParseErrorCode, Num};
 use std::ops::Range;
+use std::fmt::Display;
 
 #[derive(StructOpt)]
 #[structopt(
@@ -80,10 +81,7 @@ fn main() {
         } else if buffer.starts_with(":") {
             continue;
         } else {
-            match evaluate(&buffer, &mut interpreter, opt.tokens, opt.bexpr, opt.vars, opt.no_color) {
-                Ok(result) => println!(":{}", result),
-                Err(result) => eprintln!("{}", result),
-            }
+            evaluate(&buffer, &mut interpreter, opt.tokens, opt.bexpr, opt.vars, opt.no_color, ":");
         }
     }
 }
@@ -108,15 +106,15 @@ fn print_help(no_color: bool) {
     println!("\t-x^4");
 }
 
-fn get_variant_ord(v: &Variant) -> usize {
+fn get_variant_ord<N: Num>(v: &Variant<N>) -> usize {
     match v {
         Variant::Num(_) => 1,
         Variant::Function(_) => 0,
     }
 }
 
-fn print_vars(interpreter: &Interpreter, no_color: bool) {
-    let mut vars: Vec<(&String, &Variant)> = interpreter.vars.iter().collect();
+fn print_vars<N: Num + Display>(interpreter: &Interpreter<N>, no_color: bool) {
+    let mut vars: Vec<(&String, &Variant<N>)> = interpreter.vars.iter().collect();
     vars.sort_by(|(_, v1), (_, v2)| {
         // sort by type
         let v1_val = get_variant_ord(v1);
@@ -126,7 +124,7 @@ fn print_vars(interpreter: &Interpreter, no_color: bool) {
     for (id, val) in vars {
         let fmt;
         match val {
-            Variant::Num(n) => fmt = format!("{} = {}", &id.green(), *n),
+            Variant::Num(n) => fmt = format!("{} = {}", &id.green(), n.clone()),
             Variant::Function(_) => fmt = format!("{}(..)", &id.green()),
         }
         println!("{}", if no_color { fmt.red().clear().to_string() } else { fmt });
@@ -137,45 +135,41 @@ fn format_error(span: Range<usize>, message: &str) -> String {
     format!(" {}{} {}", " ".repeat(span.start), "^".repeat(span.len()).red(), message.red())
 }
 
-fn evaluate(input: &str, interpreter: &mut Interpreter, btokens: bool, bexpr: bool, bvars: bool, bno_color: bool) -> Result<String, String> {
-    let mut output = String::new();
+fn evaluate<N: Num + Display>(input: &str, interpreter: &mut Interpreter<N>, btokens: bool, bexpr: bool, bvars: bool, bno_color: bool, success_prefix: &str) {
     match tokenize(input) {
         Ok(tokens) => {
             if btokens {
                 let fmt = format!("Tokens: {:?}", tokens);
-                output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
+                println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
             }
             match parse(&tokens) {
                 Ok(expr) => {
                     if bexpr {
                         let fmt = format!("Expr: {:#?}", expr);
-                        output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
+                        println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
                     }
 
                     match interpreter.eval(&expr) {
                         Ok(result) => {
-                            output.push_str(&format!("{}", result));
+                            println!("{}{}", success_prefix, result);
                         },
                         Err(err) => {
                             let fmt = format!("{}", display_interpret_error(&err));
-                            output.push_str(&format!("{}", if bno_color { fmt } else { fmt.red().to_string() }));
-                            return Err(output);
+                            println!("{}", if bno_color { fmt } else { fmt.red().to_string() });
                         },
                     }
                 }
                 Err(ParseError { code, span }) => {
                     if code == ParseErrorCode::UnexpectedEOF {
-                        output.push_str(&format!("{}", format_error(input.len()..input.len()+1, &format!("{:?}", code))));
+                        println!("{}", format_error(input.len()..input.len()+1, &format!("{:?}", code)));
                     } else {
-                        output.push_str(&format!("{}", format_error(span, &format!("{:?}", code))));
+                        println!("{}", format_error(span, &format!("{:?}", code)));
                     }
-                    return Err(output);
                 },
             }
         }
         Err(TokenizeError { code, span }) => {
-            output.push_str(&format!("{}", format_error(span, &format!("{:?}", code))));
-            return Err(output);
+            println!("{}", format_error(span, &format!("{:?}", code)));
         },
     }
     if bvars {
@@ -186,10 +180,9 @@ fn evaluate(input: &str, interpreter: &mut Interpreter, btokens: bool, bexpr: bo
             } else {
                 fmt = format!("{}(..)", id);
             }
-            output.push_str(&format!("{}", if bno_color { fmt } else { fmt.yellow().to_string() }));
+            println!("{}", if bno_color { fmt } else { fmt.yellow().to_string() });
         }
     }
-    Ok(output)
 }
 
 #[inline(always)]
@@ -204,7 +197,7 @@ fn display_interpret_error(err: &InterpretError) -> String {
         InterpretError::TooManyArgs(id, n) =>
             format!("Function {:?} received more than the maximum {} argument{}.", id, n, s_if(*n != 1)),
         InterpretError::VarDoesNotExist(id) =>
-            format!("No variable {:?} exists.", id),
+            format!("No variable or function {:?} exists.", id),
         InterpretError::VarIsNotFunction(id) =>
             format!("The variable {:?} cannot be used like a function with arguments.", id),
         InterpretError::FunctionNameUsedLikeVar(id) =>

@@ -1,10 +1,11 @@
-use crate::{Expr, OpVal};
+use crate::{Expr, OpVal, Num};
 use std::collections::HashMap;
+use std::ops::Deref;
 
 #[derive(Clone)]
-pub enum Variant {
-    Num(f64),
-    Function(fn(&[f64]) -> Result<f64, InterpretError>),
+pub enum Variant<N: Num> {
+    Num(N),
+    Function(fn(&[N]) -> Result<N, InterpretError>),
 }
 
 #[derive(Debug, Clone)]
@@ -17,24 +18,24 @@ pub enum InterpretError {
 }
 
 #[derive(Clone)]
-pub struct Interpreter {
-    pub vars: HashMap<String, Variant>,
+pub struct Interpreter<N: Num> {
+    pub vars: HashMap<String, Variant<N>>,
 }
 
-impl Interpreter {
-    pub fn new() -> Interpreter {
+impl<N: Num> Interpreter<N> {
+    pub fn new() -> Interpreter<N> {
         Interpreter { vars: HashMap::new() }
     }
 
-    pub fn set_var(&mut self, name: String, value: Variant) {
+    pub fn set_var(&mut self, name: String, value: Variant<N>) {
         self.vars.insert(name, value);
     }
 
-    pub fn delete_var(&mut self, name: &str) -> Option<Variant> {
+    pub fn delete_var(&mut self, name: &str) -> Option<Variant<N>> {
         self.vars.remove(name)
     }
 
-    pub fn eval(&mut self, expr: &Expr) -> Result<f64, InterpretError> {
+    pub fn eval(&mut self, expr: &Expr<N>) -> Result<N, InterpretError> {
         // simple, naive recursive tree walk
         match expr {
             Expr::Eq(lhs, rhs) => {
@@ -50,7 +51,8 @@ impl Interpreter {
                 if let Some(var) = self.vars.get(*id) {
                     match var {
                         Variant::Num(n) => if args.len() == 1 {
-                            Ok(n * args[0])
+                            let arg = args.remove(0);
+                            Ok(n.clone().mul(arg))
                         } else {
                             Err(InterpretError::VarIsNotFunction(id.to_string()))
                         },
@@ -61,7 +63,7 @@ impl Interpreter {
                 }
             },
             Expr::Neg(expr) => Ok(-self.eval(expr)?),
-            Expr::Num(n) => Ok(*n),
+            Expr::Num(n) => Ok(n.deref().clone()),
             Expr::Op(op, lhs, rhs) => {
                 let lhs = self.eval(lhs)?;
                 let rhs = self.eval(rhs)?;
@@ -71,13 +73,13 @@ impl Interpreter {
                     OpVal::Mul => lhs * rhs,
                     OpVal::Div => lhs / rhs,
                     OpVal::Mod => lhs % rhs,
-                    OpVal::Pow => lhs.powf(rhs),
+                    OpVal::Pow => lhs.pow(rhs),
                     _ => unreachable!(),
                 })
             }
             Expr::Var(id) => if let Some(var) = self.vars.get(*id) {
                 match var {
-                    Variant::Num(n) => Ok(*n),
+                    Variant::Num(n) => Ok(n.clone()),
                     Variant::Function(_) => Err(InterpretError::FunctionNameUsedLikeVar(id.to_string())),
                 }
             } else {
@@ -87,7 +89,7 @@ impl Interpreter {
     }
 }
 
-impl Default for Interpreter {
+impl Default for Interpreter<f64> {
     fn default() -> Self {
         let mut vars = HashMap::new();
         vars.insert(String::from("pi"), Variant::Num(std::f64::consts::PI));

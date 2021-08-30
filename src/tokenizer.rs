@@ -1,3 +1,4 @@
+use crate::Num;
 use std::ops::Range;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -23,8 +24,8 @@ pub enum SymbolVal {
 use SymbolVal::*;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenValue<'input> {
-    Num(f64),
+pub enum TokenValue<'input, N: Num> {
+    Num(N),
     Id(&'input str),
     Op(OpVal),
     Symbol(SymbolVal),
@@ -32,8 +33,8 @@ pub enum TokenValue<'input> {
 use TokenValue::*;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Token<'input> {
-    pub value: TokenValue<'input>,
+pub struct Token<'input, N: Num> {
+    pub value: TokenValue<'input, N>,
     pub span: Range<usize>,
 }
 
@@ -43,6 +44,7 @@ pub enum TokenizeErrorCode<'input> {
     UnrecognizedChar(char),
 }
 use TokenizeErrorCode::*;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TokenizeError<'input> {
@@ -50,7 +52,7 @@ pub struct TokenizeError<'input> {
     pub span: Range<usize>,
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
+pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
     let mut tokens = Vec::with_capacity(16);
     let mut chars = input.chars().enumerate().peekable();
 
@@ -88,7 +90,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
                             break;
                         }
                     }
-                    if let Ok(num) = input[start..end].parse::<f64>() {
+                    if let Ok(num) = input[start..end].parse::<N>() {
                         push_token!(Num(num), start, end-start);
                     } else {
                         return Err(TokenizeError { code: InvalidNumber(&input[start..end]), span: start..end });
