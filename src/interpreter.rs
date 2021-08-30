@@ -42,9 +42,20 @@ impl<N: Num> Interpreter<N> {
         // simple, naive recursive tree walk
         match expr {
             Expr::Eq(lhs, rhs) => {
-                unimplemented!()
+                match lhs.deref() {
+                    Expr::Var(id) => {
+                        let result = self.eval(rhs)?;
+                        if let Some(val) = self.vars.get_mut(*id) {
+                            *val = Variant::Num(result.clone());
+                        } else {
+                            self.vars.insert(id.to_string(), Variant::Num(result.clone()));
+                        }
+                        Ok(result)
+                    },
+                    _ => todo!("implement algebra solving"),
+                }
             }
-            Expr::Factorial(expr) => unimplemented!(),
+            Expr::Factorial(expr) => Ok(self.eval(expr)?.factorial()),
             Expr::FuncOrVarMul(id, exprs) => {
                 let mut args = Vec::with_capacity(exprs.len());
                 for expr in exprs {
