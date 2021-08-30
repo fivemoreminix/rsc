@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum OpVal {
     Add,
@@ -28,7 +30,6 @@ pub enum TokenValue<'input> {
     Symbol(SymbolVal),
 }
 use TokenValue::*;
-use std::ops::Range;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'input> {
@@ -36,9 +37,17 @@ pub struct Token<'input> {
     pub span: Range<usize>,
 }
 
-#[derive(Debug)]
-pub struct TokenizeError {
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum TokenizeErrorCode<'input> {
+    InvalidNumber(&'input str),
+    UnrecognizedChar(char),
+}
+use TokenizeErrorCode::*;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TokenizeError<'input> {
+    pub code: TokenizeErrorCode<'input>,
+    pub span: Range<usize>,
 }
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
@@ -82,7 +91,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
                     if let Ok(num) = input[start..end].parse::<f64>() {
                         push_token!(Num(num), start, end-start);
                     } else {
-                        return Err(TokenizeError {});
+                        return Err(TokenizeError { code: InvalidNumber(&input[start..end]), span: start..end });
                     }
                 } else if c.is_alphabetic() {
                     let start = cpos;
@@ -96,6 +105,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
                         }
                     }
                     push_token!(Id(&input[start..end]), start, end-start);
+                } else if !c.is_whitespace() {
+                    return Err(TokenizeError { code: UnrecognizedChar(c), span: cpos..cpos+1 });
                 }
             }
         }
