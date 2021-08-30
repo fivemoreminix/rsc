@@ -23,14 +23,17 @@ pub struct Interpreter<N: Num> {
 }
 
 impl<N: Num> Interpreter<N> {
+    #[inline(always)]
     pub fn new() -> Interpreter<N> {
         Interpreter { vars: HashMap::new() }
     }
 
+    #[inline(always)]
     pub fn set_var(&mut self, name: String, value: Variant<N>) {
         self.vars.insert(name, value);
     }
 
+    #[inline(always)]
     pub fn delete_var(&mut self, name: &str) -> Option<Variant<N>> {
         self.vars.remove(name)
     }
@@ -89,17 +92,33 @@ impl<N: Num> Interpreter<N> {
     }
 }
 
+#[inline]
+pub fn ensure_arg_count(min: usize, max: usize, args_len: usize, func_id: &str) -> Result<(), InterpretError> {
+    if args_len < min {
+        Err(InterpretError::TooFewArgs(func_id.to_string(), min))
+    } else if args_len > max {
+        Err(InterpretError::TooManyArgs(func_id.to_string(), max))
+    } else {
+        Ok(())
+    }
+}
+
 impl Default for Interpreter<f64> {
     fn default() -> Self {
         let mut vars = HashMap::new();
         vars.insert(String::from("pi"), Variant::Num(std::f64::consts::PI));
-        vars.insert(String::from("abs"), Variant::Function(|_, args| {
-            if args.len() > 1 {
-                Err(InterpretError::TooManyArgs(String::from("abs"), 1))
-            } else if args.len() < 1 {
-                Err(InterpretError::TooFewArgs(String::from("abs"), 1))
-            } else {
-                Ok(args[0].abs())
+        vars.insert(String::from("e"), Variant::Num(std::f64::consts::E));
+        vars.insert(String::from("tau"), Variant::Num(std::f64::consts::TAU));
+        vars.insert(String::from("abs"), Variant::Function(|id, args| {
+            match ensure_arg_count(1, 1, args.len(), id) {
+                Ok(()) => Ok(args[0].abs()),
+                Err(e) => Err(e),
+            }
+        }));
+        vars.insert(String::from("sqrt"), Variant::Function(|id, args| {
+            match ensure_arg_count(1, 1, args.len(), id) {
+                Ok(()) => Ok(args[0].sqrt()),
+                Err(e) => Err(e),
             }
         }));
         Interpreter { vars }
