@@ -1,0 +1,23 @@
+expr = eq_expr ;
+
+eq_expr = add_expr, { "=", add_expr } ;
+add_expr = mul_expr, { ("+" | "-"), mul_expr } ;
+mul_expr = pow_expr, { ("*" | "/" | "%"), pow_expr } ;
+pow_expr = parentheses_mul_expr, { "^", factor } ;
+
+parentheses_mul_expr = func_or_var_mul_expr | ( factorial_expr, { "(", expr, ")" } ) ;
+func_or_var_mul_expr = identifier, "(", [ expr { ",", expr } ], ")" ; (* need lookahead 2 *)
+
+factorial_expr = factor, { "!" } ;
+factor = "(", expr, ")"
+       | "|", expr, "|"
+       | "-", expr
+       | number
+       | identifier ;
+
+identifier = alpha, { alpha | digit } ;
+alpha = "A".."Z" | "a".."z" ;
+
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+(* number = 52 or .14 or -65535 or -.256 or -340.430 etc *)
+number = [ "-" ], ( digit, { digit }, [ ".", { digit } ] ) | ( ".", digit, { digit } ) ;

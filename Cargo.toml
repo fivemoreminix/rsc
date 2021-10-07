@@ -1,10 +1,10 @@
 [package]
 name = "rsc"
-version = "2.0.0"
+version = "3.0.0"
 edition = "2018"
-authors = ["Luke I. Wilson"]
-description = "A zero-dependency calculator for solving scientific math equations in strings."
-repository = "https://github.com/asmoaesl/rsc"
+authors = ["Luke I. Wilson <thelukaswils@gmail.com>"]
+description = "A fast calculator for solving scientific and algebraic math equations in strings."
+repository = "https://github.com/fivemoreminix/rsc"
 readme = "README.md"
 keywords = ["scientific", "calculator", "parser", "expression"]
 categories = ["command-line-utilities", "parsing", "science"]
@@ -13,15 +13,17 @@ license = "MIT"
 [lib]
 path = "src/lib.rs"
 
-[dependencies]
-# dependencies for the binary version
-structopt = { version = "0.2", optional = true }
-colored = { version = "1.7", optional = true }
-
-[features]
-build-binary = ["structopt", "colored"]
-
 [[bin]]
 name = "rsc"
 path = "src/bin/main.rs"
-required-features = ["build-binary"]
+required-features = ["executable"]
+
+[features]
+executable = ["structopt", "colored"]
+
+[dependencies]
+peekmore = "1.0.0"
+num = "0.4.0"
+# dependencies for the runnable version (feature "executable")
+structopt = { version = "0.3", optional = true }
+colored = { version = "2.0", optional = true }
