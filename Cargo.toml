@@ -23,7 +23,7 @@ executable = ["structopt", "colored"]
 
 [dependencies]
 peekmore = "1.0.0"
-num = "0.4.0"
+#num = "0.4.0"
 # dependencies for the runnable version (feature "executable")
 structopt = { version = "0.3", optional = true }
 colored = { version = "2.0", optional = true }
