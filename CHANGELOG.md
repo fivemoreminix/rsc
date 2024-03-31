@@ -16,11 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
  * Rewrote *everything*.
  * Lexer and `Token` architecture. `Token` now includes data about where it was located in the input, and how many characters it spans, which is useful for errors.
- * Parser and `Expr` usage. Overall code cleanup for the parser. Planning to rewrite the parser using an Operator-precedence approach. Gotta study up before I can write a bottom-up parser from scratch. Now uses a lookahead of 2 to solve ambiguity in parsing. See grammar.
+ * Parser and `Expr` usage. Overall code cleanup for the parser. Now uses a lookahead of 2 to solve ambiguity in parsing. See grammar.
  * `ParseError` is now descriptive, including the position and length of the problem, and even sometimes providing the offending token.
  * `Computer<T>` became `Interpreter`. A lot of changes were made to the interpreter, compared to the old `Computer` that you should check out when migrating.
  * Some semantic expressions like absolute value `|x|` and factorial `x!` are now translated to `abs(x)` and `factorial(x)`, respectively.
  * The entire system still remains generic over which type of number is used, but I have simplified and extended the trait `Num` which a type must still implement to be used.
+ * Update peekmore dependency 1.0.0 -> 1.3.0. 
 
 ### Removed
  * `ans` variable.

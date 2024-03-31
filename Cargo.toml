@@ -22,7 +22,7 @@ required-features = ["executable"]
 executable = ["structopt", "colored"]
 
 [dependencies]
-peekmore = "1.0.0"
+peekmore = "1.3.0"
 #num = "0.4.0"
 # dependencies for the runnable version (feature "executable")
 structopt = { version = "0.3", optional = true }
