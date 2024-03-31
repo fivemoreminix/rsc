@@ -51,17 +51,9 @@ pub struct TokenizeError<'input> {
     pub span: Range<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TokenizeOptions {
     identifiers_contain_numbers: bool
-}
-
-impl Default for TokenizeOptions {
-    fn default() -> Self {
-        TokenizeOptions{
-            identifiers_contain_numbers: false,
-        }
-    }
 }
 
 pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
@@ -101,11 +93,11 @@ pub fn tokenize_with_options<N: Num>(input: &str, options: TokenizeOptions) -> R
             '|' => push_token!(Symbol(Pipe), cpos, 1),
 
             _ => {
-                if c.is_digit(10) || c == '.' {
+                if c.is_ascii_digit() || c == '.' {
                     let start = cpos;
                     let mut end = start + 1;
                     while let Some((_, nc)) = chars.peek() {
-                        if nc.is_digit(10) || *nc == '.' {
+                        if nc.is_ascii_digit() || *nc == '.' {
                             chars.next(); // Consume nc
                             end += 1;
                         } else {
@@ -125,7 +117,7 @@ pub fn tokenize_with_options<N: Num>(input: &str, options: TokenizeOptions) -> R
                     let mut end = start + 1;
                     while let Some((_, nc)) = chars.peek() {
                         // If it is any of _ A-z (or digits if option)
-                        if *nc == '_' || nc.is_alphanumeric() || (options.identifiers_contain_numbers && nc.is_digit(10)) {
+                        if *nc == '_' || nc.is_alphanumeric() || (options.identifiers_contain_numbers && nc.is_ascii_digit()) {
                             chars.next(); // Consume next character
                             end += 1;
                         } else {

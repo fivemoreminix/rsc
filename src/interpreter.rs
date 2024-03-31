@@ -24,7 +24,7 @@ pub struct Interpreter<N: Num> {
 
 impl<N: Num> Interpreter<N> {
     #[inline(always)]
-    pub fn new<'l>() -> Interpreter<N> {
+    pub fn new() -> Interpreter<N> {
         Interpreter {
             vars: HashMap::new(),
         }
@@ -79,7 +79,7 @@ impl<N: Num> Interpreter<N> {
                 }
             }
             Expr::Neg(expr) => Ok(-self.eval(expr)?),
-            Expr::Num(n) => Ok(n.deref().clone()),
+            Expr::Num(n) => Ok((**n).clone()),
             Expr::Op(op, lhs, rhs) => {
                 let lhs = self.eval(lhs)?;
                 let rhs = self.eval(rhs)?;

@@ -48,11 +48,11 @@ pub fn parse<'input, N: Num>(tokens: &'input [Token<'input, N>]) -> ParseResult<
 }
 
 #[inline(always)]
-fn parse_expr<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_expr<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     parse_eq(tokens)
 }
 
-fn parse_eq<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_eq<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     let mut result = parse_add(tokens)?;
     while let Some(peek_tok) = tokens.peek() {
         if peek_tok.value == TokenValue::Op(OpVal::Eq) {
@@ -66,7 +66,7 @@ fn parse_eq<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t,
     Ok(result)
 }
 
-fn parse_add<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_add<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     let mut result = parse_mul(tokens)?;
     while let Some(peek_tok) = tokens.peek() {
         match peek_tok.value {
@@ -81,7 +81,7 @@ fn parse_add<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t
     Ok(result)
 }
 
-fn parse_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     let mut result = parse_pow(tokens)?;
     while let Some(peek_tok) = tokens.peek() {
         match peek_tok.value {
@@ -96,7 +96,7 @@ fn parse_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t
     Ok(result)
 }
 
-fn parse_pow<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_pow<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     let mut result = parse_parentheses_mul(tokens)?;
     while let Some(peek_tok) = tokens.peek() {
         if peek_tok.value == TokenValue::Op(OpVal::Pow) {
@@ -110,7 +110,7 @@ fn parse_pow<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t
     Ok(result)
 }
 
-fn parse_parentheses_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_parentheses_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     if let Some(func_or_var_mul) = parse_func_or_var_mul(tokens) {
         Ok(func_or_var_mul?)
     } else {
@@ -139,8 +139,8 @@ fn parse_parentheses_mul<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> Pa
 // This function returns Option to the result, because it doesn't *have* to parse a value.
 // And because it should only be used by parse_parentheses_mul.
 #[inline]
-fn parse_func_or_var_mul<'t, 's, N: Num>(
-    tokens: &'s mut TokenIter<'t, N>,
+fn parse_func_or_var_mul<'t, N: Num>(
+    tokens: &mut TokenIter<'t, N>,
 ) -> Option<ParseResult<'t, N>> {
     match tokens.peek() {
         Some(Token {
@@ -166,7 +166,7 @@ fn parse_func_or_var_mul<'t, 's, N: Num>(
             if let Some(tok) = tokens.peek() {
                 if tok.value == TokenValue::Symbol(SymbolVal::RP) {
                     tokens.next(); // Consume ')'
-                    return Some(Ok(Expr::FuncOrVarMul(*id, Vec::new())));
+                    return Some(Ok(Expr::FuncOrVarMul(id, Vec::new())));
                 }
             }
 
@@ -197,7 +197,7 @@ fn parse_func_or_var_mul<'t, 's, N: Num>(
     }
 }
 
-fn parse_factorial<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_factorial<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     let mut result = parse_factor(tokens)?;
     while let Some(peek_tok) = tokens.peek() {
         if peek_tok.value == TokenValue::Op(OpVal::Exclaim) {
@@ -210,7 +210,7 @@ fn parse_factorial<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseRes
     Ok(result)
 }
 
-fn parse_factor<'t, 's, N: Num>(tokens: &'s mut TokenIter<'t, N>) -> ParseResult<'t, N> {
+fn parse_factor<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     match tokens.next() {
         Some(tok) => match &tok.value {
             TokenValue::Num(num) => Ok(Expr::Num(num)),
