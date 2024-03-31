@@ -139,9 +139,7 @@ fn parse_parentheses_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResu
 // This function returns Option to the result, because it doesn't *have* to parse a value.
 // And because it should only be used by parse_parentheses_mul.
 #[inline]
-fn parse_func_or_var_mul<'t, N: Num>(
-    tokens: &mut TokenIter<'t, N>,
-) -> Option<ParseResult<'t, N>> {
+fn parse_func_or_var_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> Option<ParseResult<'t, N>> {
     match tokens.peek() {
         Some(Token {
             value: TokenValue::Id(id),

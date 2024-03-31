@@ -53,14 +53,17 @@ pub struct TokenizeError<'input> {
 
 #[derive(Debug, Clone, Default)]
 pub struct TokenizeOptions {
-    identifiers_contain_numbers: bool
+    identifiers_contain_numbers: bool,
 }
 
 pub fn tokenize<N: Num>(input: &str) -> Result<Vec<Token<N>>, TokenizeError> {
     tokenize_with_options(input, TokenizeOptions::default())
 }
 
-pub fn tokenize_with_options<N: Num>(input: &str, options: TokenizeOptions) -> Result<Vec<Token<N>>, TokenizeError> {
+pub fn tokenize_with_options<N: Num>(
+    input: &str,
+    options: TokenizeOptions,
+) -> Result<Vec<Token<N>>, TokenizeError> {
     let mut tokens = Vec::with_capacity(16);
     let mut chars = input.chars().enumerate().peekable();
 
@@ -112,12 +115,15 @@ pub fn tokenize_with_options<N: Num>(input: &str, options: TokenizeOptions) -> R
                             span: start..end,
                         });
                     }
-                } else if c == '_' || c.is_alphabetic(){
+                } else if c == '_' || c.is_alphabetic() {
                     let start = cpos;
                     let mut end = start + 1;
                     while let Some((_, nc)) = chars.peek() {
                         // If it is any of _ A-z (or digits if option)
-                        if *nc == '_' || nc.is_alphanumeric() || (options.identifiers_contain_numbers && nc.is_ascii_digit()) {
+                        if *nc == '_'
+                            || nc.is_alphanumeric()
+                            || (options.identifiers_contain_numbers && nc.is_ascii_digit())
+                        {
                             chars.next(); // Consume next character
                             end += 1;
                         } else {
