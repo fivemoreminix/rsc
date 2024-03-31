@@ -84,7 +84,7 @@ i.set_var(String::from("double"), Variant::Function(|name, args| {
 ```shell
 cargo build --release --features=executable
 ```
-The `executable` feature is required to tell the crate to bring in certain dependencies only for the executable version.
+The `executable` feature is required to tell the crate to bring in certain dependencies only for the executable version, for colors in the terminal and argument parsing.
 
 ### Usage
 ```shell
@@ -119,7 +119,8 @@ tau = 6.283185307179586
 
 Expressions can be passed to rsc directly:
 ```shell
-rsc "12/sqrt(128)" > result.txt
+$ rsc "12/sqrt(128)"
+1.0606601717798212
 ```
 
 There are various flags you can pass. Try:
@@ -127,14 +128,34 @@ There are various flags you can pass. Try:
 rsc -tev
 ```
 
+```shell
+$ rsc -h
+rsc 3.0.0
+A scientific calculator for the terminal.
+
+USAGE:
+    rsc [FLAGS] [expr]
+
+FLAGS:
+    -e, --expr        Prints the expression tree
+    -h, --help        Prints help information
+        --no-color    Prevents colored text
+    -t, --tokens      Prints the tokens
+    -v, --vars        Prints variable map
+    -V, --version     Prints version information
+
+ARGS:
+    <expr>
+```
+
 ## Notes About Performance
- * The lexer is iterative but could easily be optimized.
- * The parser is an LL(2) recursive-descent parser, and that's the simplest, most brute-force parsing solution I came up with. But, I plan to replace it with an LR(2) operator-precedence parser, which would be much more efficient. The parser is currently the slowest of the 3 phases.
- * The `Interpreter::eval` function uses recursion for simplicity. Removing the recursion could prevent unnecessary pushing and popping of the frame pointer, providing better performance where recursive calls are found.
+ * The lexer is iterative and can easily be optimized.
+ * The parser is an LL(2) recursive-descent parser, and that's the simplest, most brute-force parsing solution I came up with. It's easy to understand and maintain, but not the most efficient. The parser is currently the slowest of the 3 phases.
+ * The `Interpreter::eval` function uses recursion for simplicity. Removing the recursion could prevent unnecessary pushing and popping of the frame pointer, and enable better caching, providing better performance.
  * Performance improvement PRs are very much welcomed and probably easy!
 
 ## Stability
-RSC will not have any major changes to its syntax. It will remain consistent for a long time. It is up to forkers to make different tastes of RSC. It will also forever keep the same open-source permissions.
+RSC will not have any major changes to its syntax. It will remain consistent for a long time. It is up to forkers to make different flavors of RSC. It will also forever keep the same open-source permissions.
 
 ## License
 RSC is MIT licensed. RSC will always remain free to modify and use without attribution.
