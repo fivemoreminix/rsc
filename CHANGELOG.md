@@ -5,11 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## 3.0 - 2021-08-30
-### Additions
+### Added
 #### In the executable
  * Help command list
  * `vars` command shows active variables and functions.
- * BigRational from num crate replaces f64.
+
+### In the library
+ * Implement the `Num` trait for all signed integer primitives: `i8`, `i16`, `i32`, `i64`, `i128`, `isize`, and floats: `f32` and `f64`.
 
 ### Changed
  * Rewrote *everything*.
