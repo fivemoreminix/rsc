@@ -40,41 +40,56 @@ pub trait Num:
     fn pow(self, other: Self) -> Self;
 }
 
-// Default impls for Num
-impl Num for f32 {
-    #[inline(always)]
-    fn zero() -> Self {
-        0.0
-    }
-    #[inline(always)]
-    fn one() -> Self {
-        1.0
-    }
-    #[inline(always)]
-    fn is_whole(&self) -> bool {
-        self.fract() == 0.0
-    }
-    #[inline(always)]
-    fn pow(self, other: Self) -> Self {
-        self.powf(other)
-    }
+macro_rules! impl_num_for_integer {
+    ($itype:ty) => {
+        impl Num for $itype {
+            #[inline(always)]
+            fn zero() -> Self {
+                0
+            }
+            #[inline(always)]
+            fn one() -> Self {
+                1
+            }
+            #[inline(always)]
+            fn is_whole(&self) -> bool {
+                true
+            }
+            #[inline(always)]
+            fn pow(self, other: Self) -> Self {
+                self.wrapping_pow(other as u32) // Wraps on overflow...
+            }
+        }
+    };
 }
+impl_num_for_integer!(i8);
+impl_num_for_integer!(i16);
+impl_num_for_integer!(i32);
+impl_num_for_integer!(i64);
+impl_num_for_integer!(i128);
+impl_num_for_integer!(isize);
 
-impl Num for f64 {
-    #[inline(always)]
-    fn zero() -> Self {
-        0.0
-    }
-    #[inline(always)]
-    fn one() -> Self {
-        1.0
-    }
-    #[inline(always)]
-    fn is_whole(&self) -> bool {
-        self.fract() == 0.0
-    }
-    #[inline(always)]
-    fn pow(self, other: Self) -> Self {
-        self.powf(other)
-    }
+macro_rules! impl_num_for_float {
+    ($ftype:ty) => {
+        impl Num for $ftype {
+            #[inline(always)]
+            fn zero() -> Self {
+                0.0
+            }
+            #[inline(always)]
+            fn one() -> Self {
+                1.0
+            }
+            #[inline(always)]
+            fn is_whole(&self) -> bool {
+                self.fract() == 0.0
+            }
+            #[inline(always)]
+            fn pow(self, other: Self) -> Self {
+                self.powf(other) // inf or -inf if overflowed...
+            }
+        }
+    };
 }
+impl_num_for_float!(f32);
+impl_num_for_float!(f64);
