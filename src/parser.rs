@@ -31,7 +31,6 @@ macro_rules! error {
 
 type TokenIter<'t, N> = PeekMoreIterator<Iter<'t, Token<'t, N>>>;
 
-#[inline]
 pub fn parse<'input, N: Num>(tokens: &'input [Token<'input, N>]) -> ParseResult<'input, N> {
     let mut iter = tokens.iter().peekmore();
     let result = parse_expr(&mut iter);
@@ -47,7 +46,7 @@ pub fn parse<'input, N: Num>(tokens: &'input [Token<'input, N>]) -> ParseResult<
     }
 }
 
-#[inline(always)]
+#[inline]
 fn parse_expr<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResult<'t, N> {
     parse_eq(tokens)
 }
@@ -138,7 +137,6 @@ fn parse_parentheses_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> ParseResu
 
 // This function returns Option to the result, because it doesn't *have* to parse a value.
 // And because it should only be used by parse_parentheses_mul.
-#[inline]
 fn parse_func_or_var_mul<'t, N: Num>(tokens: &mut TokenIter<'t, N>) -> Option<ParseResult<'t, N>> {
     match tokens.peek() {
         Some(Token {
